@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin | Painel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <a class="brand" href="../index.html">Barber<span>.</span>CO Admin</a>
+      <button id="logout" class="btn secondary"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1>Painel de Administracao</h1>
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-servicos">Servicos e Precos</button>
+        <button class="tab-btn" data-tab="tab-horarios">Horarios Disponiveis</button>
+        <button class="tab-btn" data-tab="tab-imprevistos">Imprevistos/Bloqueios</button>
+        <button class="tab-btn" data-tab="tab-galeria">Galeria</button>
+        <button class="tab-btn" data-tab="tab-cursos">Cursos</button>
+        <button class="tab-btn" data-tab="tab-agendamentos">Agendamentos</button>
+      </div>
+
+      <section id="tab-servicos" class="tab-pane active card">
+        <h2>Servicos e Precos</h2>
+        <form id="form-servico" class="form">
+          <input id="servico-id" type="hidden">
+          <label>Nome do Servico <input id="servico-nome" required></label>
+          <label>Preco (R$) <input id="servico-preco" type="number" step="0.01" required></label>
+          <label>Duracao (min) <input id="servico-duracao" type="number" required></label>
+          <label><input id="servico-ativo" type="checkbox" checked> Ativo</label>
+          <button class="btn" type="submit">Salvar servico</button>
+        </form>
+        <table><thead><tr><th>Servico</th><th>Preco</th><th>Duracao</th><th>Acoes</th></tr></thead><tbody id="servicos-tabela"></tbody></table>
+      </section>
+
+      <section id="tab-horarios" class="tab-pane card">
+        <h2>Horarios Disponiveis</h2>
+        <p class="small">Edicao visual por dia da semana.</p>
+        <form id="form-horarios" class="form">
+          <label>Intervalo padrao (min)
+            <input id="horario-intervalo" type="number" min="5" step="5" required>
+          </label>
+          <label>Dia da semana
+            <select id="horario-dia" required>
+              <option value="segunda">Segunda</option>
+              <option value="terca">Terca</option>
+              <option value="quarta">Quarta</option>
+              <option value="quinta">Quinta</option>
+              <option value="sexta">Sexta</option>
+              <option value="sabado">Sabado</option>
+              <option value="domingo">Domingo</option>
+            </select>
+          </label>
+          <label>Inicio
+            <input id="horario-inicio" type="time">
+          </label>
+          <label>Fim
+            <input id="horario-fim" type="time">
+          </label>
+          <label><input id="horario-ativo" type="checkbox" checked> Dia ativo</label>
+          <button class="btn" type="submit">Salvar horario</button>
+          <button class="btn secondary" type="button" id="horarios-reset">Limpar formulario</button>
+        </form>
+        <table><thead><tr><th>Dia</th><th>Status</th><th>Inicio</th><th>Fim</th><th>Acoes</th></tr></thead><tbody id="horarios-preview"></tbody></table>
+      </section>
+
+      <section id="tab-imprevistos" class="tab-pane card">
+        <h2>Imprevistos / Bloqueios</h2>
+        <form id="form-imprevisto" class="form">
+          <label>Data <input id="imp-data" type="date" required></label>
+          <label>Periodo
+            <select id="imp-periodo">
+              <option value="manha">Manha</option>
+              <option value="tarde">Tarde</option>
+              <option value="dia_todo">Dia todo</option>
+            </select>
+          </label>
+          <label>Motivo <input id="imp-motivo" required></label>
+          <button class="btn" type="submit">Adicionar bloqueio</button>
+        </form>
+        <table><thead><tr><th>Data</th><th>Periodo</th><th>Motivo</th><th>Acoes</th></tr></thead><tbody id="imprevistos-lista"></tbody></table>
+      </section>
+
+      <section id="tab-galeria" class="tab-pane card">
+        <h2>Galeria</h2>
+        <form id="form-foto" class="form">
+          <h3>Upload de imagem</h3>
+          <label>Arquivo <input id="foto-arquivo" type="file" accept="image/*" required></label>
+          <label>Categoria <input id="foto-categoria" required></label>
+          <label>Titulo <input id="foto-titulo" required></label>
+          <button class="btn" type="submit">Enviar foto</button>
+        </form>
+        <form id="form-video" class="form">
+          <h3>Adicionar video YouTube</h3>
+          <label>Categoria <input id="video-categoria" required></label>
+          <label>Titulo <input id="video-titulo" required></label>
+          <label>URL Embed <input id="video-url" required></label>
+          <button class="btn" type="submit">Salvar video</button>
+        </form>
+        <table><thead><tr><th>Tipo</th><th>Categoria</th><th>Titulo</th><th>URL</th><th>Acoes</th></tr></thead><tbody id="midias-lista"></tbody></table>
+      </section>
+
+      <section id="tab-cursos" class="tab-pane card">
+        <h2>Cursos</h2>
+        <form id="form-curso" class="form">
+          <input id="curso-id" type="hidden">
+          <label>Titulo <input id="curso-titulo" required></label>
+          <label>Descricao <textarea id="curso-descricao" required></textarea></label>
+          <label>Preco <input id="curso-preco" type="number" step="0.01" required></label>
+          <label>Carga Horaria <input id="curso-carga" required></label>
+          <label>URL da Imagem <input id="curso-imagem" required></label>
+          <label>Link de Compra <input id="curso-link" required></label>
+          <button class="btn" type="submit">Salvar curso</button>
+        </form>
+        <table><thead><tr><th>Titulo</th><th>Preco</th><th>Carga</th><th>Acoes</th></tr></thead><tbody id="cursos-lista"></tbody></table>
+      </section>
+
+      <section id="tab-agendamentos" class="tab-pane card">
+        <h2>Agendamentos</h2>
+        <div class="filter-row">
+          <label>Filtrar por data minima<input id="filtro-data" type="date"></label>
+          <button id="btn-filtrar-data" class="btn secondary" type="button">Aplicar filtro</button>
+        </div>
+        <table>
+          <thead><tr><th>Cliente</th><th>Servico</th><th>Data</th><th>Horario</th><th>Status</th><th>Acoes</th></tr></thead>
+          <tbody id="agendamentos-lista"></tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>

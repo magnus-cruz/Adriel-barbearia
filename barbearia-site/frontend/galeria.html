@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barber.CO | Galeria</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <a class="brand" href="index.html">Barber<span>.</span>CO</a>
+      <nav class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="agendar.html">Agendar</a>
+        <a class="active" href="galeria.html">Galeria</a>
+        <a href="cursos.html">Cursos</a>
+        <a href="localizacao.html">Localizacao</a>
+        <a href="admin/login.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="container">
+      <h1>Galeria de Estilo</h1>
+      <div id="filtros" class="tabs"></div>
+      <div id="galeria-grid" class="gallery-grid"></div>
+    </div>
+  </main>
+
+  <div id="lightbox" class="lightbox">
+    <img alt="Imagem ampliada">
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script src="js/galeria.js"></script>
+</body>
+</html>

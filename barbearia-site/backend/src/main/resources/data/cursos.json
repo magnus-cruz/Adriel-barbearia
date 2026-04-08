@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "titulo": "Curso de Barbeiro Profissional",
+    "descricao": "Aprenda tecnicas completas de corte e barba.",
+    "preco": 497.0,
+    "cargaHoraria": "40h",
+    "imagemUrl": "https://images.unsplash.com/photo-1622287162716-f311baa1a2b8?auto=format&fit=crop&w=900&q=80",
+    "linkCompra": "https://wa.me/556199999999?text=Quero+o+curso"
+  }
+]

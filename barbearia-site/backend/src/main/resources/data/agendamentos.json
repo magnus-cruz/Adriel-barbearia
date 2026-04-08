@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "nome": "Joao Silva",
+    "telefone": "61999999999",
+    "servico": "Corte Masculino",
+    "data": "2026-04-09",
+    "horario": "10:00",
+    "status": "confirmado"
+  }
+]

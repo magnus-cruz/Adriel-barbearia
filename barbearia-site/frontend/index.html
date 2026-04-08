@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Barber.CO | Home</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="container">
+      <a class="brand" href="index.html">Barber<span>.</span>CO</a>
+      <nav class="nav-links">
+        <a class="active" href="index.html">Home</a>
+        <a href="agendar.html">Agendar</a>
+        <a href="galeria.html">Galeria</a>
+        <a href="cursos.html">Cursos</a>
+        <a href="localizacao.html">Localizacao</a>
+        <a href="admin/login.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <article class="hero-card">
+        <h1>Classico no corte. Moderno no detalhe.</h1>
+        <p>Experiencia premium com acabamento impecavel, ambiente elegante e profissionais especializados em estilo masculino.</p>
+        <a class="btn" href="agendar.html"><i class="fa-solid fa-calendar-check"></i> Agendar Agora</a>
+      </article>
+      <article class="card">
+        <h2>Sobre nos</h2>
+        <p class="small">A Barber.CO nasceu para elevar o cuidado masculino com tecnicas classicas e atendimento moderno. Cada servico e pensado para oferecer estilo, conforto e personalidade.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2>Servicos</h2>
+      <div id="servicos-home" class="grid services"></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2>Galeria Preview</h2>
+      <div id="preview-galeria" class="gallery-grid"></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <p><i class="fa-solid fa-location-dot"></i> Rua Exemplo, 123 - Centro - Brasilia/DF</p>
+      <p><i class="fa-regular fa-clock"></i> Seg-Sex 09h as 19h | Sabado 08h as 17h</p>
+      <p><i class="fa-brands fa-instagram"></i> @barber.co</p>
+    </div>
+  </footer>
+
+  <script src="js/api.js"></script>
+  <script src="js/whatsapp.js"></script>
+  <script>
+    async function initHome() {
+      const servicos = await API.getServicos();
+      document.getElementById("servicos-home").innerHTML = servicos.map((s) => `
+        <article class="card">
+          <h3>${s.nome}</h3>
+          <p class="price">R$ ${s.preco.toFixed(2)}</p>
+          <p class="small">Duracao media: ${s.duracaoMinutos} min</p>
+        </article>`).join("");
+
+      const midias = await API.getMidias();
+      document.getElementById("preview-galeria").innerHTML = midias
+        .filter((m) => m.tipo === "foto")
+        .slice(0, 4)
+        .map((m) => `<img src="${m.url.startsWith('http') ? m.url : 'http://localhost:8080' + m.url}" alt="${m.titulo}">`)
+        .join("");
+    }
+    initHome();
+  </script>
+</body>
+</html>
