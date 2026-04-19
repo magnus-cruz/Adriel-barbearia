@@ -28,7 +28,7 @@ import java.util.UUID;
 public class MidiaController {
 
     private static final Logger logger = LoggerFactory.getLogger(MidiaController.class);
-    private static final String ADMIN_TOKEN = "barberco-admin-2026";
+    private static final String TOKEN_ADMIN = "barberco-admin-2026";
     private final MidiaService midiaService;
     private final CatalogoService catalogoService;
 
@@ -37,18 +37,29 @@ public class MidiaController {
         this.catalogoService = catalogoService;
     }
 
-    @PostMapping(value = "/api/admin/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(
+            value = "/api/admin/upload",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = "application/json;charset=UTF-8"
+    )
     public ResponseEntity<Map<String, Object>> upload(@RequestParam("file") MultipartFile file,
-                                                      @RequestParam("titulo") String titulo,
-                                  @RequestParam("categoria") String categoria,
-                                  @RequestHeader(value = "Authorization", required = false) String authHeader) {
+                                                       @RequestParam(value = "titulo", defaultValue = "Sem titulo") String titulo,
+                                                       @RequestParam(value = "categoria", defaultValue = "galeria") String categoria,
+                                                       @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        System.out.println("=== UPLOAD RECEBIDO ===");
+        System.out.println("Arquivo: " + (file != null ? file.getOriginalFilename() : "(null)"));
+        System.out.println("Titulo: " + titulo);
+        System.out.println("Auth header: " + authHeader);
+
         try {
             // Valida token administrativo antes de aceitar uploads.
             if (!tokenValido(authHeader)) {
-            return ResponseEntity.status(401).body(Map.of(
-                "status", "error",
-                "mensagem", "Nao autorizado."
-            ));
+                System.out.println("Upload bloqueado: token invalido");
+                return ResponseEntity.status(401).body(Map.of(
+                        "status", "error",
+                        "codigo", 401,
+                        "mensagem", "Nao autorizado. Faca login novamente."
+                ));
             }
 
             logger.info("Upload recebido: nome='{}', contentType='{}', tamanho={} bytes",
@@ -78,12 +89,14 @@ public class MidiaController {
             midia.setTamanhoKb(Math.max(1L, file.getSize() / 1024L));
             midia.setDataUpload(LocalDate.now().format(DateTimeFormatter.ISO_DATE));
             catalogoService.salvarMidia(midia);
+            String url = "http://localhost:8080/api/uploads/" + nomeArquivo;
+            System.out.println("Upload salvo: " + url);
 
             Map<String, Object> arquivo = new LinkedHashMap<>();
             arquivo.put("id", midia.getId());
             arquivo.put("nome", nomeArquivo);
             arquivo.put("nomeArquivo", nomeArquivo);
-            arquivo.put("url", "http://localhost:8080/api/uploads/" + nomeArquivo);
+            arquivo.put("url", url);
             arquivo.put("tipo", file.getContentType());
             arquivo.put("titulo", tituloFinal);
             arquivo.put("categoria", categoriaFinal);
@@ -91,27 +104,28 @@ public class MidiaController {
             arquivo.put("dataUpload", midia.getDataUpload());
 
             Map<String, Object> body = new LinkedHashMap<>();
-            body.put("status", "sucesso");
-            body.put("mensagem", "Upload realizado com sucesso.");
+            body.put("status", "success");
+            body.put("mensagem", "Arquivo enviado com sucesso.");
             body.put("arquivo", arquivo);
             return ResponseEntity.ok(body);
         } catch (IllegalArgumentException e) {
             Map<String, Object> erro = new LinkedHashMap<>();
-            erro.put("status", "erro");
+            erro.put("status", "error");
             erro.put("codigo", 400);
             erro.put("mensagem", e.getMessage());
             return ResponseEntity.badRequest().body(erro);
         } catch (Exception e) {
             logger.error("Falha ao salvar upload", e);
+            System.err.println("Erro no upload: " + e.getMessage());
             Map<String, Object> erro = new LinkedHashMap<>();
-            erro.put("status", "erro");
+            erro.put("status", "error");
             erro.put("codigo", 500);
             erro.put("mensagem", "Erro interno ao processar upload.");
             return ResponseEntity.internalServerError().body(erro);
         }
     }
 
-    @DeleteMapping("/api/admin/galeria/{nomeArquivo:.+}")
+    @DeleteMapping(value = "/api/admin/galeria/{nomeArquivo:.+}", produces = "application/json;charset=UTF-8")
     public ResponseEntity<Map<String, String>> excluirArquivo(@PathVariable String nomeArquivo,
                                                               @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
@@ -151,7 +165,7 @@ public class MidiaController {
         }
     }
 
-    @GetMapping("/api/galeria")
+    @GetMapping(value = "/api/galeria", produces = "application/json;charset=UTF-8")
     public ResponseEntity<List<Midia>> listarGaleria() {
         return ResponseEntity.ok(catalogoService.listarMidias());
     }
@@ -181,8 +195,26 @@ public class MidiaController {
         return getUpload(filename);
     }
 
-    private boolean tokenValido(String header) {
-        if (header == null || header.isBlank()) return false;
-        return ADMIN_TOKEN.equals(header.replace("Bearer ", "").trim());
+    private boolean tokenValido(String authHeader) {
+        System.out.println("Header recebido: [" + authHeader + "]");
+
+        if (authHeader == null || authHeader.isBlank()) {
+            System.out.println("Token ausente ou vazio.");
+            return false;
+        }
+
+        String token = authHeader.trim();
+
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7).trim();
+        }
+
+        System.out.println("Token extraido: [" + token + "]");
+        System.out.println("Token esperado: [" + TOKEN_ADMIN + "]");
+
+        boolean valido = TOKEN_ADMIN.equals(token);
+        System.out.println("Token valido: " + valido);
+
+        return valido;
     }
 }

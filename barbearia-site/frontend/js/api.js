@@ -1,6 +1,11 @@
 const API_BASE = "http://localhost:8080";
 let currentUploadXhr = null;
 
+function endpointComNoCache(endpoint) {
+  const separador = endpoint.includes("?") ? "&" : "?";
+  return `${endpoint}${separador}_=${Date.now()}`;
+}
+
 function resolveApiAssetUrl(url) {
   if (!url) return "";
   return url.startsWith("http") ? url : `${API_BASE}${url}`;
@@ -17,11 +22,20 @@ function adminHeaders(isJson = true) {
 }
 
 async function apiRequest(method, endpoint, body = null, extraOptions = {}) {
+  const metodo = String(method || "GET").toUpperCase();
+  const endpointFinal = metodo === "GET" ? endpointComNoCache(endpoint) : endpoint;
   const options = {
-    method,
+    method: metodo,
     headers: extraOptions.headers || {},
     ...extraOptions
   };
+
+  if (metodo === "GET") {
+    options.headers = {
+      "Cache-Control": "no-cache",
+      ...options.headers
+    };
+  }
 
   if (body !== null && body !== undefined) {
     if (body instanceof FormData) {
@@ -34,7 +48,7 @@ async function apiRequest(method, endpoint, body = null, extraOptions = {}) {
 
   let response;
   try {
-    response = await fetch(`${API_BASE}${endpoint}`, options);
+    response = await fetch(`${API_BASE}${endpointFinal}`, options);
   } catch (error) {
     throw new Error("Spring Boot nao esta rodando. Inicie o servidor.");
   }
@@ -62,7 +76,10 @@ async function apiRequest(method, endpoint, body = null, extraOptions = {}) {
 
 async function checkServerOnline() {
   try {
-    const response = await fetch(`${API_BASE}/api/health`, { method: "GET" });
+    const response = await fetch(`${API_BASE}${endpointComNoCache("/api/health")}`, {
+      method: "GET",
+      headers: { "Cache-Control": "no-cache" }
+    });
     return response.ok;
   } catch (error) {
     return false;
@@ -181,7 +198,7 @@ const API = {
   getServicos: () => apiRequest("GET", "/api/servicos"),
   getCursos: () => apiRequest("GET", "/api/cursos"),
   getMidias: async () => normalizarMidias(await apiRequest("GET", "/api/galeria")),
-  getDisponibilidade: (data, servico) => apiRequest("GET", `/api/horarios/disponiveis?data=${data}&servico=${encodeURIComponent(servico || "")}`),
+  getDisponibilidade: (data, servico) => apiRequest("GET", `/api/horarios/disponiveis?data=${encodeURIComponent(data)}&servico=${encodeURIComponent(servico || "")}`),
   criarAgendamento: (payload) => apiRequest("POST", "/api/agendamentos", payload),
 
   adminLogin: (usuario, senha) => apiRequest("POST", "/api/admin/login", { usuario, senha }),
@@ -196,7 +213,7 @@ const API = {
 
   adminHorarios: {
     get: () => apiRequest("GET", "/api/horarios"),
-    update: (payload) => apiRequest("POST", "/api/admin/horarios", payload)
+    update: (payload) => apiRequest("POST", "/api/admin/horarios", payload, { headers: adminHeaders() })
   },
 
   adminImprevistos: {
@@ -207,7 +224,7 @@ const API = {
 
   adminMidias: {
     list: () => apiRequest("GET", "/api/galeria"),
-    delete: (id) => apiRequest("DELETE", `/api/midias/${id}`, null, { headers: adminHeaders(false) }),
+    delete: (nomeArquivo) => apiRequest("DELETE", `/api/admin/galeria/${encodeURIComponent(nomeArquivo)}`, null, { headers: adminHeaders(false) }),
     createVideo: (payload) => apiRequest("POST", "/api/midias/video", payload, { headers: adminHeaders() }),
     uploadFoto: (file, metadata, onProgress) => uploadMidia(file, metadata, onProgress)
   },

@@ -15,7 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/admin")
+@CrossOrigin(origins = "*")
+@RequestMapping(value = "/api/admin", produces = "application/json;charset=UTF-8")
 public class AdminController {
 
     private static final String ADMIN_TOKEN = "barberco-admin-2026";
@@ -86,13 +87,6 @@ public class AdminController {
     @PutMapping("/horarios")
     public HorarioDisponivel atualizarHorarios(@RequestHeader("Authorization") String authorization,
                                                @RequestBody HorarioDisponivel horarioDisponivel) {
-        validarToken(authorization);
-        return horarioService.salvarConfiguracao(horarioDisponivel);
-    }
-
-    @PostMapping("/horarios")
-    public HorarioDisponivel atualizarHorariosPost(@RequestHeader("Authorization") String authorization,
-                                                   @RequestBody HorarioDisponivel horarioDisponivel) {
         validarToken(authorization);
         return horarioService.salvarConfiguracao(horarioDisponivel);
     }

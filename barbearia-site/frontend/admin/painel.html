@@ -53,43 +53,43 @@
         <h2>Servicos e Precos</h2>
         <form id="form-servico" class="admin-form">
           <input id="servico-id" type="hidden">
-          <div class="form-group"><label>Nome do Servico</label><input id="servico-nome" required></div>
-          <div class="form-group"><label>Preco (R$)</label><input id="servico-preco" type="number" step="0.01" required></div>
-          <div class="form-group"><label>Duracao (min)</label><input id="servico-duracao" type="number" required></div>
-          <div class="form-group"><label><input id="servico-ativo" type="checkbox" checked> Ativo</label></div>
+          <div class="form-group"><label>Nome do Servico</label><input id="nome-servico" required></div>
+          <div class="form-group"><label>Preco (R$)</label><input id="preco-servico" type="number" step="0.01" required></div>
+          <div class="form-group"><label>Duracao (min)</label><input id="duracao-servico" type="number" required></div>
+          <div class="form-group"><label><input id="ativo-servico" type="checkbox" checked> Ativo</label></div>
           <button class="btn-add full" type="submit">Salvar servico</button>
         </form>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Servico</th><th>Preco</th><th>Duracao</th><th>Acoes</th></tr></thead><tbody id="servicos-tabela"></tbody></table></div>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Servico</th><th>Preco</th><th>Duracao</th><th>Acoes</th></tr></thead><tbody id="tbody-servicos"></tbody></table></div>
       </section>
 
       <section id="tab-horarios" class="tab-pane card">
         <h2>Horarios Disponiveis</h2>
         <form id="form-horarios" class="admin-form">
-          <div class="form-group"><label>Intervalo padrao (min)</label><input id="horario-intervalo" type="number" min="5" step="5" required></div>
+          <div class="form-group"><label>Intervalo padrao (min)</label><input id="intervalo-padrao" type="number" min="5" step="5" required></div>
           <div class="form-group"><label>Dia da semana</label>
-            <select id="horario-dia" required>
+            <select id="dia-semana" required>
               <option value="segunda">Segunda</option><option value="terca">Terca</option><option value="quarta">Quarta</option>
               <option value="quinta">Quinta</option><option value="sexta">Sexta</option><option value="sabado">Sabado</option><option value="domingo">Domingo</option>
             </select>
           </div>
-          <div class="form-group"><label>Inicio</label><input id="horario-inicio" type="time"></div>
-          <div class="form-group"><label>Fim</label><input id="horario-fim" type="time"></div>
-          <div class="form-group full"><label><input id="horario-ativo" type="checkbox" checked> Dia ativo</label></div>
+          <div class="form-group"><label>Inicio</label><input id="inicio-horario" type="time"></div>
+          <div class="form-group"><label>Fim</label><input id="fim-horario" type="time"></div>
+          <div class="form-group full"><label><input id="dia-ativo" type="checkbox" checked> Dia ativo</label></div>
           <button class="btn-add" type="submit">Salvar horario</button>
           <button class="btn-acao btn-editar" type="button" id="horarios-reset">Limpar formulario</button>
         </form>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Dia</th><th>Status</th><th>Inicio</th><th>Fim</th><th>Acoes</th></tr></thead><tbody id="horarios-preview"></tbody></table></div>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Dia</th><th>Status</th><th>Inicio</th><th>Fim</th><th>Acoes</th></tr></thead><tbody id="tbody-horarios"></tbody></table></div>
       </section>
 
       <section id="tab-imprevistos" class="tab-pane card">
         <h2>Imprevistos / Bloqueios</h2>
         <form id="form-imprevisto" class="admin-form">
-          <div class="form-group"><label>Data</label><input id="imp-data" type="date" required></div>
-          <div class="form-group"><label>Periodo</label><select id="imp-periodo"><option value="manha">Manha</option><option value="tarde">Tarde</option><option value="dia_todo">Dia todo</option></select></div>
-          <div class="form-group full"><label>Motivo</label><input id="imp-motivo" required></div>
+          <div class="form-group"><label>Data</label><input id="data-imprevisto" type="date" required></div>
+          <div class="form-group"><label>Periodo</label><select id="periodo-imprevisto"><option value="manha">Manha</option><option value="tarde">Tarde</option><option value="dia_todo">Dia todo</option></select></div>
+          <div class="form-group full"><label>Motivo</label><input id="motivo-imprevisto" required></div>
           <button class="btn-add full" type="submit">Adicionar bloqueio</button>
         </form>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Data</th><th>Periodo</th><th>Motivo</th><th>Acoes</th></tr></thead><tbody id="imprevistos-lista"></tbody></table></div>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Data</th><th>Periodo</th><th>Motivo</th><th>Acoes</th></tr></thead><tbody id="tbody-imprevistos"></tbody></table></div>
       </section>
 
       <section id="tab-galeria" class="tab-pane card">
@@ -108,6 +108,10 @@
             <p id="upload-progress-label" style="font-size:.82rem;color:rgba(253,240,213,.5)">0%</p>
             <button id="upload-cancel" class="btn-acao btn-editar" type="button" style="display:none">Cancelar upload</button>
           </div>
+          <button onclick="diagnosticarToken()" type="button"
+            style="margin:1rem 0;padding:.5rem 1rem;background:#003049;color:#fdf0d5;border:1px solid #c1121f;cursor:pointer">
+            Testar Token (Debug)
+          </button>
           <button id="btn-enviar" disabled style="opacity:.4;cursor:not-allowed" class="btn-add full" type="submit">Enviar imagem</button>
         </form>
 
@@ -121,15 +125,15 @@
         <h2>Cursos</h2>
         <form id="form-curso" class="admin-form">
           <input id="curso-id" type="hidden">
-          <div class="form-group"><label>Titulo</label><input id="curso-titulo" required></div>
-          <div class="form-group"><label>Preco</label><input id="curso-preco" type="number" step="0.01" required></div>
-          <div class="form-group"><label>Carga Horaria</label><input id="curso-carga" required></div>
-          <div class="form-group full"><label>Descricao</label><textarea id="curso-descricao" required></textarea></div>
-          <div class="form-group"><label>URL da Imagem</label><input id="curso-imagem" required></div>
-          <div class="form-group"><label>Link de Compra</label><input id="curso-link" required></div>
+          <div class="form-group"><label>Titulo</label><input id="titulo-curso" required></div>
+          <div class="form-group"><label>Preco</label><input id="preco-curso" type="number" step="0.01" required></div>
+          <div class="form-group"><label>Carga Horaria</label><input id="carga-curso" required></div>
+          <div class="form-group full"><label>Descricao</label><textarea id="desc-curso" required></textarea></div>
+          <div class="form-group"><label>URL da Imagem</label><input id="imagem-curso" required></div>
+          <div class="form-group"><label>Link de Compra</label><input id="link-curso" required></div>
           <button class="btn-add full" type="submit">Salvar curso</button>
         </form>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Titulo</th><th>Preco</th><th>Carga</th><th>Acoes</th></tr></thead><tbody id="cursos-lista"></tbody></table></div>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Titulo</th><th>Preco</th><th>Carga</th><th>Acoes</th></tr></thead><tbody id="tbody-cursos"></tbody></table></div>
       </section>
 
       <section id="tab-agendamentos" class="tab-pane card">
@@ -139,7 +143,7 @@
           <div class="form-group"><label>Status</label><select id="filtro-status" onchange="filtrarAgendamentos()"><option value="todos">Todos</option><option value="confirmado">Confirmados</option><option value="pendente">Pendentes</option><option value="cancelado">Cancelados</option></select></div>
           <button id="btn-filtrar-data" class="btn-add full" type="button">Aplicar filtro</button>
         </div>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Cliente</th><th>Servico</th><th>Data</th><th>Horario</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="agendamentos-lista"></tbody></table></div>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Cliente</th><th>Servico</th><th>Data</th><th>Horario</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="tbody-agendamentos"></tbody></table></div>
       </section>
     </div>
   </main>

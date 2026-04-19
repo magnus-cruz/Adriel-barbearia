@@ -1,0 +1,19 @@
+[ {
+  "id" : "ef230d99-e5de-4a3f-8dd4-37276bef8c35",
+  "nomeArquivo" : "upload-f8cf6604-e093-49e9-a5f2-b52d0a9099b3.jpg",
+  "tipo" : "image/jpeg",
+  "categoria" : "cortes",
+  "titulo" : "Corte Degradê Moderno",
+  "url" : "http://localhost:8080/api/uploads/upload-f8cf6604-e093-49e9-a5f2-b52d0a9099b3.jpg",
+  "tamanhoKb" : 1873,
+  "dataUpload" : "2026-04-19"
+}, {
+  "id" : "ba80f1e6-c1ec-4f25-8fce-93a9344b0a89",
+  "nomeArquivo" : "upload-f377e042-6973-456e-9ddc-98ee998bdc86.jpg",
+  "tipo" : "image/jpeg",
+  "categoria" : "cortes",
+  "titulo" : "Corte Social",
+  "url" : "http://localhost:8080/api/uploads/upload-f377e042-6973-456e-9ddc-98ee998bdc86.jpg",
+  "tamanhoKb" : 391,
+  "dataUpload" : "2026-04-19"
+} ]

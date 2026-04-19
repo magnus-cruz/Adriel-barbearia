@@ -94,6 +94,11 @@ public class HorarioService {
         return slots;
     }
 
+    // Alias semantico para manter compatibilidade com chamadas antigas.
+    public List<String> calcularDisponiveis(String dataIso, String servicoNome) {
+        return gerarHorariosDisponiveis(dataIso, servicoNome);
+    }
+
     public boolean isDataBloqueada(String dataIso, List<Imprevisto> imprevistos) {
         return imprevistos.stream().anyMatch(i -> dataIso.equals(i.getData()) && "dia_todo".equalsIgnoreCase(i.getPeriodo()));
     }

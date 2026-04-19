@@ -3,14 +3,18 @@ package com.barbearia.controller;
 import com.barbearia.model.HorarioDisponivel;
 import com.barbearia.service.HorarioService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
+@CrossOrigin(origins = "*")
+@RequestMapping(value = "/api", produces = "application/json;charset=UTF-8")
 public class HorarioController {
+
+    private static final String ADMIN_TOKEN = "barberco-admin-2026";
 
     private final HorarioService horarioService;
 
@@ -19,21 +23,59 @@ public class HorarioController {
     }
 
     @GetMapping("/horarios")
-    public HorarioDisponivel getHorarios() {
-        return horarioService.getConfiguracao();
+    public ResponseEntity<?> buscarHorarios() {
+        try {
+            return ResponseEntity.ok(horarioService.getConfiguracao());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "status", "error",
+                    "mensagem", "Erro ao buscar horários: " + e.getMessage()
+            ));
+        }
     }
 
     @PostMapping("/admin/horarios")
-    public HorarioDisponivel salvarHorarios(@RequestBody HorarioDisponivel horarios) {
-        if (horarios == null || horarios.getConfiguracao() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Configuracao de horarios invalida.");
+    public ResponseEntity<?> salvarHorarios(
+            @RequestBody HorarioDisponivel config,
+            @RequestHeader(value = "Authorization", required = false) String authHeader
+    ) {
+        if (!tokenValido(authHeader)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "status", "error",
+                    "mensagem", "Não autorizado."
+            ));
         }
-        return horarioService.salvarConfiguracao(horarios);
+
+        try {
+            horarioService.salvarConfiguracao(config);
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "mensagem", "Horários salvos com sucesso."
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "status", "error",
+                    "mensagem", "Erro ao salvar horários: " + e.getMessage()
+            ));
+        }
     }
 
     @GetMapping("/horarios/disponiveis")
-    public Map<String, Object> getDisponiveis(@RequestParam String data, @RequestParam String servico) {
-        var horarios = horarioService.gerarHorariosDisponiveis(data, servico);
-        return Map.of("data", data, "servico", servico, "horarios", horarios);
+    public ResponseEntity<?> horariosDisponiveis(@RequestParam String data,
+                                                 @RequestParam(required = false) String servico) {
+        try {
+            List<String> slots = horarioService.calcularDisponiveis(data, servico);
+            return ResponseEntity.ok(slots);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                    "status", "error",
+                    "mensagem", "Erro ao calcular horários: " + e.getMessage()
+            ));
+        }
+    }
+
+    private boolean tokenValido(String header) {
+        if (header == null || header.isBlank()) return false;
+        return ADMIN_TOKEN.equals(header.replace("Bearer ", "").trim());
     }
 }

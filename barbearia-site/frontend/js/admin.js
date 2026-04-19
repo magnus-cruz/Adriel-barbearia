@@ -17,12 +17,31 @@ let horariosConfigCache = null;
 let selectedUploadFile = null;
 let agendamentosCache = [];
 
+const abaFuncoes = {
+  "tab-servicos": () => carregarServicos(),
+  "tab-horarios": () => carregarHorarios(),
+  "tab-imprevistos": () => carregarImprevistos(),
+  "tab-galeria": () => carregarMidiasAdmin(),
+  "tab-cursos": () => carregarCursos(),
+  "tab-agendamentos": () => carregarAgendamentos()
+};
+
 function mostrarSucesso(mensagem) {
   alert(mensagem);
 }
 
 function mostrarErro(mensagem) {
   alert(mensagem);
+}
+
+function renderEstadoTabela(tbody, colunas, mensagem, cor = "rgba(253,240,213,.3)") {
+  if (!tbody) return;
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="${colunas}" style="text-align:center;color:${cor};padding:1.5rem">
+        ${mensagem}
+      </td>
+    </tr>`;
 }
 
 function atualizarEstadoBotaoUpload(ativo) {
@@ -104,6 +123,14 @@ function bindTabs() {
       btn.classList.add("active");
       const painel = document.getElementById(btn.dataset.tab);
       if (painel) painel.classList.add("active");
+
+      // Sempre recarrega os dados da aba selecionada.
+      const carregarAba = abaFuncoes[btn.dataset.tab];
+      if (typeof carregarAba === "function") {
+        carregarAba().catch((erro) => {
+          console.error("Falha ao carregar aba:", erro?.message || erro);
+        });
+      }
     });
   });
 }
@@ -174,12 +201,20 @@ function abrirModalExcluir(nomeArquivo, cardElement) {
   document.addEventListener("keydown", escHandler);
 }
 
-async function carregarServicosAdmin() {
-  const servicos = await API.adminServicos.list();
-  const tabela = document.getElementById("servicos-tabela");
+async function carregarServicos() {
+  const tabela = document.getElementById("tbody-servicos");
   if (!tabela) return;
 
-  tabela.innerHTML = servicos.map((servico) => `
+  renderEstadoTabela(tabela, 4, "Carregando...");
+
+  try {
+    const servicos = await API.adminServicos.list();
+    if (!Array.isArray(servicos) || !servicos.length) {
+      renderEstadoTabela(tabela, 4, "Nenhum servico cadastrado.");
+      return;
+    }
+
+    tabela.innerHTML = servicos.map((servico) => `
     <tr>
       <td>${servico.nome}</td>
       <td>R$ ${Number(servico.preco || 0).toFixed(2)}</td>
@@ -192,45 +227,58 @@ async function carregarServicosAdmin() {
       </td>
     </tr>
   `).join("");
+  } catch (erro) {
+    renderEstadoTabela(tabela, 4, `Erro ao carregar. <br><small>${erro?.message || "Falha na API."}</small>`, "#c1121f");
+  }
 }
 
 function editarServico(servico) {
   document.getElementById("servico-id").value = servico.id;
-  document.getElementById("servico-nome").value = servico.nome || "";
-  document.getElementById("servico-preco").value = servico.preco ?? "";
-  document.getElementById("servico-duracao").value = servico.duracaoMinutos ?? "";
-  document.getElementById("servico-ativo").checked = !!servico.ativo;
+  document.getElementById("nome-servico").value = servico.nome || "";
+  document.getElementById("preco-servico").value = servico.preco ?? "";
+  document.getElementById("duracao-servico").value = servico.duracaoMinutos ?? "";
+  document.getElementById("ativo-servico").checked = !!servico.ativo;
 }
 
 async function excluirServico(id) {
   await API.adminServicos.delete(id);
-  await carregarServicosAdmin();
+  await carregarServicos();
 }
 
 async function salvarServico(e) {
   e.preventDefault();
   const id = document.getElementById("servico-id").value;
   const payload = {
-    nome: document.getElementById("servico-nome").value,
-    preco: Number(document.getElementById("servico-preco").value),
-    duracaoMinutos: Number(document.getElementById("servico-duracao").value),
-    ativo: document.getElementById("servico-ativo").checked
+    nome: document.getElementById("nome-servico").value,
+    preco: Number(document.getElementById("preco-servico").value),
+    duracaoMinutos: Number(document.getElementById("duracao-servico").value),
+    ativo: document.getElementById("ativo-servico").checked
   };
 
-  if (id) await API.adminServicos.update(id, payload);
-  else await API.adminServicos.create(payload);
+  try {
+    if (id) await API.adminServicos.update(id, payload);
+    else await API.adminServicos.create(payload);
 
-  e.target.reset();
-  await carregarServicosAdmin();
+    e.target.reset();
+    mostrarSucesso("Servico salvo com sucesso!");
+    await carregarServicos();
+  } catch (erro) {
+    mostrarErro(`Erro ao salvar servico: ${erro?.message || "falha desconhecida"}`);
+  }
 }
 
-async function carregarHorariosAdmin() {
-  const data = await API.adminHorarios.get();
-  horariosConfigCache = data;
-  const dias = horariosConfigCache.configuracao?.diasSemana || {};
+async function carregarHorarios() {
+  const tabela = document.getElementById("tbody-horarios");
+  if (!tabela) return;
 
-  const intervalo = document.getElementById("horario-intervalo");
-  if (intervalo) intervalo.value = horariosConfigCache.configuracao?.intervaloPadrao || 30;
+  renderEstadoTabela(tabela, 5, "Carregando...");
+  try {
+    const data = await API.adminHorarios.get();
+    horariosConfigCache = data;
+    const dias = horariosConfigCache.configuracao?.diasSemana || {};
+
+    const intervalo = document.getElementById("intervalo-padrao");
+    if (intervalo) intervalo.value = horariosConfigCache.configuracao?.intervaloPadrao || 30;
 
   const rotulos = {
     segunda: "Segunda",
@@ -242,39 +290,39 @@ async function carregarHorariosAdmin() {
     domingo: "Domingo"
   };
 
-  const tabela = document.getElementById("horarios-preview");
-  if (!tabela) return;
+    tabela.innerHTML = Object.keys(rotulos).map((dia) => {
+      const d = dias[dia] || { ativo: false, inicio: null, fim: null };
+      return `<tr><td>${rotulos[dia]}</td><td>${d.ativo ? "Ativo" : "Inativo"}</td><td>${d.inicio || "-"}</td><td>${d.fim || "-"}</td><td><button class="btn-acao btn-editar" type="button" onclick="editarHorario('${dia}')">Editar</button></td></tr>`;
+    }).join("");
 
-  tabela.innerHTML = Object.keys(rotulos).map((dia) => {
-    const d = dias[dia] || { ativo: false, inicio: null, fim: null };
-    return `<tr><td>${rotulos[dia]}</td><td>${d.ativo ? "Ativo" : "Inativo"}</td><td>${d.inicio || "-"}</td><td>${d.fim || "-"}</td><td><button class="btn-acao btn-editar" type="button" onclick="editarHorario('${dia}')">Editar</button></td></tr>`;
-  }).join("");
-
-  preencherFormularioHorario(document.getElementById("horario-dia").value);
+    preencherFormularioHorario(document.getElementById("dia-semana").value);
+  } catch (erro) {
+    renderEstadoTabela(tabela, 5, `Erro ao carregar horarios.<br><small>${erro?.message || "falha na API"}</small>`, "#c1121f");
+  }
 }
 
 function preencherFormularioHorario(dia) {
   const dias = horariosConfigCache?.configuracao?.diasSemana || {};
   const confDia = dias[dia] || { ativo: false, inicio: null, fim: null };
 
-  document.getElementById("horario-dia").value = dia;
-  document.getElementById("horario-ativo").checked = !!confDia.ativo;
-  document.getElementById("horario-inicio").value = confDia.inicio || "";
-  document.getElementById("horario-fim").value = confDia.fim || "";
+  document.getElementById("dia-semana").value = dia;
+  document.getElementById("dia-ativo").checked = !!confDia.ativo;
+  document.getElementById("inicio-horario").value = confDia.inicio || "";
+  document.getElementById("fim-horario").value = confDia.fim || "";
 }
 
 function editarHorario(dia) {
   preencherFormularioHorario(dia);
 }
 
-async function salvarHorarios(e) {
+async function salvarHorario(e) {
   e.preventDefault();
 
-  const dia = document.getElementById("horario-dia").value;
-  const ativo = document.getElementById("horario-ativo").checked;
-  const inicio = document.getElementById("horario-inicio").value;
-  const fim = document.getElementById("horario-fim").value;
-  const intervalo = Number(document.getElementById("horario-intervalo").value);
+  const dia = document.getElementById("dia-semana").value;
+  const ativo = document.getElementById("dia-ativo").checked;
+  const inicio = document.getElementById("inicio-horario").value;
+  const fim = document.getElementById("fim-horario").value;
+  const intervalo = Number(document.getElementById("intervalo-padrao").value);
 
   if (!horariosConfigCache?.configuracao) {
     horariosConfigCache = { configuracao: { intervaloPadrao: 30, diasSemana: {} } };
@@ -291,21 +339,33 @@ async function salvarHorarios(e) {
     ativo
   };
 
-  await API.adminHorarios.update(horariosConfigCache);
-  alert("Horarios atualizados.");
-  await carregarHorariosAdmin();
+  try {
+    await API.adminHorarios.update(horariosConfigCache);
+    mostrarSucesso("Horario salvo com sucesso!");
+    await carregarHorarios();
+  } catch (erro) {
+    mostrarErro(`Erro ao salvar horario: ${erro?.message || "falha desconhecida"}`);
+  }
 }
 
 function limparFormularioHorario() {
-  preencherFormularioHorario(document.getElementById("horario-dia").value);
+  preencherFormularioHorario(document.getElementById("dia-semana").value);
 }
 
 async function carregarImprevistos() {
-  const itens = await API.adminImprevistos.list();
-  const tabela = document.getElementById("imprevistos-lista");
+  const tabela = document.getElementById("tbody-imprevistos");
   if (!tabela) return;
 
-  tabela.innerHTML = itens.map((item) => `
+  renderEstadoTabela(tabela, 4, "Carregando...");
+
+  try {
+    const itens = await API.adminImprevistos.list();
+    if (!Array.isArray(itens) || !itens.length) {
+      renderEstadoTabela(tabela, 4, "Nenhum imprevisto cadastrado.");
+      return;
+    }
+
+    tabela.innerHTML = itens.map((item) => `
     <tr>
       <td>${item.data}</td>
       <td>${item.periodo}</td>
@@ -313,6 +373,9 @@ async function carregarImprevistos() {
       <td><button class="btn-acao btn-excluir-tabela" type="button" onclick="excluirImprevisto(${item.id})">Excluir</button></td>
     </tr>
   `).join("");
+  } catch (erro) {
+    renderEstadoTabela(tabela, 4, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#c1121f");
+  }
 }
 
 async function excluirImprevisto(id) {
@@ -322,13 +385,18 @@ async function excluirImprevisto(id) {
 
 async function salvarImprevisto(e) {
   e.preventDefault();
-  await API.adminImprevistos.create({
-    data: document.getElementById("imp-data").value,
-    periodo: document.getElementById("imp-periodo").value,
-    motivo: document.getElementById("imp-motivo").value
-  });
-  e.target.reset();
-  await carregarImprevistos();
+  try {
+    await API.adminImprevistos.create({
+      data: document.getElementById("data-imprevisto").value,
+      periodo: document.getElementById("periodo-imprevisto").value,
+      motivo: document.getElementById("motivo-imprevisto").value
+    });
+    e.target.reset();
+    mostrarSucesso("Bloqueio adicionado!");
+    await carregarImprevistos();
+  } catch (erro) {
+    mostrarErro(`Erro ao salvar imprevisto: ${erro?.message || "falha desconhecida"}`);
+  }
 }
 
 async function carregarMidiasAdmin() {
@@ -338,6 +406,84 @@ async function carregarMidiasAdmin() {
 async function excluirMidia(id) {
   await API.adminMidias.delete(id);
   await carregarMidiasAdmin();
+}
+
+function uploadMidia(arquivo, titulo, categoria, onProgress = () => {}) {
+  return new Promise((resolve, reject) => {
+    // Garante sessao valida antes de iniciar o envio.
+    if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
+      reject(new Error("Faca login como administrador primeiro."));
+      return;
+    }
+
+    const token = typeof getToken === "function" ? getToken() : "";
+    if (!token) {
+      reject(new Error("Token nao encontrado. Faca login novamente."));
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", arquivo);
+    formData.append("titulo", titulo);
+    formData.append("categoria", categoria);
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener("progress", (event) => {
+      if (!event.lengthComputable) return;
+      const percentual = Math.round((event.loaded / event.total) * 100);
+      onProgress(percentual);
+    });
+
+    xhr.addEventListener("load", () => {
+      let resposta = {};
+      try {
+        resposta = JSON.parse(xhr.responseText || "{}");
+      } catch (error) {
+        reject(new Error("Resposta invalida do servidor."));
+        return;
+      }
+
+      if (xhr.status === 200 && (resposta.status === "success" || resposta.status === "sucesso")) {
+        resolve(resposta);
+        return;
+      }
+
+      if (xhr.status === 401) {
+        reject(new Error("Sessao expirada. Faca login novamente."));
+        return;
+      }
+
+      reject(new Error(resposta.mensagem || "Falha desconhecida."));
+    });
+
+    xhr.addEventListener("error", () => {
+      reject(new Error("Servidor offline. Inicie o Spring Boot."));
+    });
+
+    xhr.addEventListener("abort", () => {
+      reject(new Error("Upload cancelado."));
+    });
+
+    // Sequencia obrigatoria para multipart com token.
+    xhr.open("POST", "http://localhost:8080/api/admin/upload");
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.send(formData);
+  });
+}
+
+function diagnosticarToken() {
+  const token = typeof getToken === "function" ? getToken() : "";
+  const logado = typeof isAdminLogado === "function" ? isAdminLogado() : false;
+
+  console.log("=== DIAGNOSTICO TOKEN ===");
+  console.log("Logado:", logado);
+  console.log("Token:", token);
+  console.log("Header que sera enviado:", `Bearer ${token}`);
+
+  alert(
+    `Logado: ${logado}\nToken: ${token}\nVerifique o console (F12).`
+  );
 }
 
 async function uploadFoto(e) {
@@ -357,6 +503,14 @@ async function uploadFoto(e) {
     return;
   }
 
+  if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
+    mostrarErro("Faca login como administrador primeiro.");
+    setTimeout(() => {
+      window.location.href = "/admin/login.html";
+    }, 1500);
+    return;
+  }
+
   const progressWrap = document.getElementById("upload-progress-wrap");
   const progress = document.getElementById("upload-progress");
   const progressLabel = document.getElementById("upload-progress-label");
@@ -368,7 +522,7 @@ async function uploadFoto(e) {
   if (progressLabel) progressLabel.textContent = "0%";
 
   if (cancelButton) {
-    cancelButton.onclick = () => API.cancelUpload();
+    cancelButton.onclick = () => mostrarErro("Cancelamento indisponivel neste modo de upload.");
   }
 
   try {
@@ -377,7 +531,7 @@ async function uploadFoto(e) {
       throw new Error("Spring Boot nao esta rodando. Inicie o servidor.");
     }
 
-    const payload = await API.uploadMidia(arquivo, { titulo, categoria }, (percentual) => {
+    const payload = await uploadMidia(arquivo, titulo, categoria, (percentual) => {
       if (progress) progress.value = percentual;
       if (progressLabel) progressLabel.textContent = `${percentual}%`;
     });
@@ -389,6 +543,13 @@ async function uploadFoto(e) {
     limparPreviewUpload();
   } catch (error) {
     const message = error?.message || "Falha ao enviar imagem.";
+    if (message.toLowerCase().includes("sessao expirada")) {
+      mostrarErro(message);
+      if (typeof fazerLogout === "function") {
+        fazerLogout();
+      }
+      return;
+    }
     mostrarErro(`Erro no upload: ${message}`);
   } finally {
     if (cancelButton) cancelButton.style.display = "none";
@@ -408,11 +569,19 @@ async function salvarVideo(e) {
 }
 
 async function carregarCursos() {
-  const cursos = await API.adminCursos.list();
-  const tabela = document.getElementById("cursos-lista");
+  const tabela = document.getElementById("tbody-cursos");
   if (!tabela) return;
 
-  tabela.innerHTML = cursos.map((curso) => `
+  renderEstadoTabela(tabela, 4, "Carregando...");
+
+  try {
+    const cursos = await API.adminCursos.list();
+    if (!Array.isArray(cursos) || !cursos.length) {
+      renderEstadoTabela(tabela, 4, "Nenhum curso cadastrado.");
+      return;
+    }
+
+    tabela.innerHTML = cursos.map((curso) => `
     <tr>
       <td>${curso.titulo}</td>
       <td>R$ ${Number(curso.preco || 0).toFixed(2)}</td>
@@ -425,16 +594,19 @@ async function carregarCursos() {
       </td>
     </tr>
   `).join("");
+  } catch (erro) {
+    renderEstadoTabela(tabela, 4, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#c1121f");
+  }
 }
 
 function editarCurso(curso) {
   document.getElementById("curso-id").value = curso.id;
-  document.getElementById("curso-titulo").value = curso.titulo || "";
-  document.getElementById("curso-descricao").value = curso.descricao || "";
-  document.getElementById("curso-preco").value = curso.preco ?? "";
-  document.getElementById("curso-carga").value = curso.cargaHoraria || "";
-  document.getElementById("curso-imagem").value = curso.imagemUrl || "";
-  document.getElementById("curso-link").value = curso.linkCompra || "";
+  document.getElementById("titulo-curso").value = curso.titulo || "";
+  document.getElementById("desc-curso").value = curso.descricao || "";
+  document.getElementById("preco-curso").value = curso.preco ?? "";
+  document.getElementById("carga-curso").value = curso.cargaHoraria || "";
+  document.getElementById("imagem-curso").value = curso.imagemUrl || "";
+  document.getElementById("link-curso").value = curso.linkCompra || "";
 }
 
 async function excluirCurso(id) {
@@ -446,25 +618,41 @@ async function salvarCurso(e) {
   e.preventDefault();
   const id = document.getElementById("curso-id").value;
   const payload = {
-    titulo: document.getElementById("curso-titulo").value,
-    descricao: document.getElementById("curso-descricao").value,
-    preco: Number(document.getElementById("curso-preco").value),
-    cargaHoraria: document.getElementById("curso-carga").value,
-    imagemUrl: document.getElementById("curso-imagem").value,
-    linkCompra: document.getElementById("curso-link").value
+    titulo: document.getElementById("titulo-curso").value,
+    descricao: document.getElementById("desc-curso").value,
+    preco: Number(document.getElementById("preco-curso").value),
+    cargaHoraria: document.getElementById("carga-curso").value,
+    imagemUrl: document.getElementById("imagem-curso").value,
+    linkCompra: document.getElementById("link-curso").value
   };
 
-  if (id) await API.adminCursos.update(id, payload);
-  else await API.adminCursos.create(payload);
+  try {
+    if (id) await API.adminCursos.update(id, payload);
+    else await API.adminCursos.create(payload);
 
-  e.target.reset();
-  await carregarCursos();
+    e.target.reset();
+    mostrarSucesso("Curso salvo com sucesso!");
+    await carregarCursos();
+  } catch (erro) {
+    mostrarErro(`Erro ao salvar curso: ${erro?.message || "falha desconhecida"}`);
+  }
 }
 
 async function carregarAgendamentos() {
+  const tabela = document.getElementById("tbody-agendamentos");
+  if (tabela) {
+    renderEstadoTabela(tabela, 6, "Carregando...");
+  }
+
   const data = document.getElementById("filtro-data")?.value || "";
-  agendamentosCache = await API.adminAgendamentos.list(data);
-  filtrarAgendamentos();
+  try {
+    agendamentosCache = await API.adminAgendamentos.list(data);
+    filtrarAgendamentos();
+  } catch (erro) {
+    if (tabela) {
+      renderEstadoTabela(tabela, 6, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#c1121f");
+    }
+  }
 }
 
 function formatarData(dataIso) {
@@ -506,7 +694,7 @@ function renderizarAgendamento(ag) {
 }
 
 function filtrarAgendamentos() {
-  const tabela = document.getElementById("agendamentos-lista");
+  const tabela = document.getElementById("tbody-agendamentos");
   if (!tabela) return;
 
   const filtro = (document.getElementById("filtro-status")?.value || "todos").toLowerCase();
@@ -557,6 +745,7 @@ window.editarHorario = editarHorario;
 window.excluirImprevisto = excluirImprevisto;
 window.excluirCurso = excluirCurso;
 window.cancelarAgendamento = cancelarAgendamento;
+window.diagnosticarToken = diagnosticarToken;
 
 window.addEventListener("DOMContentLoaded", async () => {
   requireAuth();
@@ -567,20 +756,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   bindLogout();
   configurarUploadImagem();
 
-  document.getElementById("form-servico").addEventListener("submit", salvarServico);
-  document.getElementById("form-horarios").addEventListener("submit", salvarHorarios);
-  document.getElementById("horario-dia").addEventListener("change", (event) => preencherFormularioHorario(event.target.value));
-  document.getElementById("horarios-reset").addEventListener("click", limparFormularioHorario);
-  document.getElementById("form-imprevisto").addEventListener("submit", salvarImprevisto);
-  document.getElementById("form-foto").addEventListener("submit", uploadFoto);
-  document.getElementById("form-video").addEventListener("submit", salvarVideo);
-  document.getElementById("form-curso").addEventListener("submit", salvarCurso);
-  document.getElementById("btn-filtrar-data").addEventListener("click", carregarAgendamentos);
+  document.getElementById("form-servico")?.addEventListener("submit", salvarServico);
+  document.getElementById("form-horarios")?.addEventListener("submit", salvarHorario);
+  document.getElementById("dia-semana")?.addEventListener("change", (event) => preencherFormularioHorario(event.target.value));
+  document.getElementById("horarios-reset")?.addEventListener("click", limparFormularioHorario);
+  document.getElementById("form-imprevisto")?.addEventListener("submit", salvarImprevisto);
+  document.getElementById("form-foto")?.addEventListener("submit", uploadFoto);
+  document.getElementById("form-video")?.addEventListener("submit", salvarVideo);
+  document.getElementById("form-curso")?.addEventListener("submit", salvarCurso);
+  document.getElementById("btn-filtrar-data")?.addEventListener("click", carregarAgendamentos);
 
-  await carregarServicosAdmin();
-  await carregarHorariosAdmin();
-  await carregarImprevistos();
-  await carregarMidiasAdmin();
-  await carregarCursos();
-  await carregarAgendamentos();
+  // Carrega dados da primeira aba no startup.
+  await carregarServicos();
 });

@@ -10,17 +10,17 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                // Em desenvolvimento local, aceitamos as origens mais comuns.
-                .allowedOrigins(
-                        "http://localhost:5500",
-                        "http://127.0.0.1:5500",
-                        "http://localhost:3000",
-                        "file://",
-                        "*"
-                )
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                // Com wildcard em origens, credentials deve ficar false.
+                .allowedOriginPatterns("*")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
+            .allowedHeaders(
+                "Authorization",
+                "Content-Type",
+                "Cache-Control",
+                "Pragma",
+                "Expires",
+                "X-Requested-With"
+            )
+            .exposedHeaders("Authorization", "Content-Type")
                 .allowCredentials(false)
                 .maxAge(3600);
     }

@@ -12,5 +12,9 @@
         "statusBar.noFolderBackground": "#9B5C00",
         "statusBar.noFolderForeground": "#FFFAF2"
     },
-    "liveServer.settings.port": 5500
+    "terminal.integrated.tabs.enabled": true,
+    "terminal.integrated.defaultLocation": "panel",
+    "debug.toolBarLocation": "docked",
+    "liveServer.settings.port": 5500,
+    "java.configuration.updateBuildConfiguration": "interactive"
 }
