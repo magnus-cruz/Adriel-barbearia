@@ -7,6 +7,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class CatalogoService {
@@ -90,22 +92,34 @@ public class CatalogoService {
     }
 
     public List<Midia> listarMidias() {
-        return jsonDataStore.readList("midias.json", new TypeReference<>() {
+        return jsonDataStore.readList("midia-metadata.json", new TypeReference<>() {
         });
     }
 
     public Midia salvarMidia(Midia midia) {
         List<Midia> midias = listarMidias();
-        long nextId = midias.stream().map(Midia::getId).filter(id -> id != null).max(Long::compareTo).orElse(0L) + 1;
-        midia.setId(nextId);
+        midia.setId(UUID.randomUUID().toString());
         midias.add(midia);
-        jsonDataStore.writeList("midias.json", midias);
+        jsonDataStore.writeList("midia-metadata.json", midias);
         return midia;
     }
 
-    public void excluirMidia(Long id) {
+    public void excluirMidia(String id) {
         List<Midia> midias = listarMidias();
-        midias.removeIf(m -> m.getId().equals(id));
-        jsonDataStore.writeList("midias.json", midias);
+        midias.removeIf(m -> Objects.equals(m.getId(), id));
+        jsonDataStore.writeList("midia-metadata.json", midias);
+    }
+
+    public void excluirMidiaPorNomeArquivo(String nomeArquivo) {
+        List<Midia> midias = listarMidias();
+        midias.removeIf(midia -> {
+            String arquivo = midia.getNomeArquivo();
+            if (arquivo != null && !arquivo.isBlank()) {
+                return arquivo.equals(nomeArquivo);
+            }
+            String url = midia.getUrl();
+            return url != null && !url.isBlank() && (url.endsWith("/" + nomeArquivo) || url.endsWith(nomeArquivo));
+        });
+        jsonDataStore.writeList("midia-metadata.json", midias);
     }
 }

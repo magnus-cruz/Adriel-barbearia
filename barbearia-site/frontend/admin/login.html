@@ -3,45 +3,187 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin | Login</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-  <link rel="stylesheet" href="../css/style.css">
+  <title>Barber.CO | Login Admin</title>
+  <style>
+    :root {
+      --molten: #780000;
+      --brick: #c1121f;
+      --cream: #fdf0d5;
+      --deep: #003049;
+      --ink: #040c10;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top right, rgba(193, 18, 31, 0.18), transparent 40%), var(--ink);
+      color: var(--cream);
+      display: grid;
+      place-items: center;
+      font-family: "Barlow", "Segoe UI", sans-serif;
+      padding: 1rem;
+    }
+
+    .login-wrap {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .logo {
+      text-align: center;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      letter-spacing: .04em;
+    }
+
+    .logo span {
+      color: var(--brick);
+    }
+
+    .card {
+      background: var(--deep);
+      border: 1px solid rgba(193, 18, 31, 0.35);
+      border-radius: 6px;
+      padding: 1.4rem;
+      box-shadow: 0 10px 36px rgba(0, 0, 0, .38);
+    }
+
+    .titulo {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.4rem;
+      margin-bottom: .2rem;
+    }
+
+    .subtitulo {
+      color: rgba(253, 240, 213, 0.6);
+      font-size: .86rem;
+      margin-bottom: 1rem;
+    }
+
+    .form {
+      display: grid;
+      gap: .9rem;
+    }
+
+    .form-group {
+      display: grid;
+      gap: .35rem;
+    }
+
+    .form-group label {
+      font-size: .72rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(253, 240, 213, 0.55);
+    }
+
+    .form-group input {
+      background: rgba(4, 12, 16, .7);
+      border: 1px solid rgba(253, 240, 213, .14);
+      color: var(--cream);
+      padding: .72rem .9rem;
+      border-radius: 2px;
+      outline: none;
+      font-size: .9rem;
+      font-family: "Barlow", "Segoe UI", sans-serif;
+    }
+
+    .form-group input:focus {
+      border-color: rgba(193, 18, 31, .52);
+    }
+
+    .btn {
+      margin-top: .2rem;
+      border: none;
+      background: var(--brick);
+      color: var(--cream);
+      font-size: .82rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      padding: .72rem 1rem;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: background .2s;
+    }
+
+    .btn:hover {
+      background: var(--molten);
+    }
+
+    .erro {
+      min-height: 1.1rem;
+      color: #ff8f8f;
+      font-size: .82rem;
+      margin-top: .2rem;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-8px); }
+      40%, 80% { transform: translateX(8px); }
+    }
+
+    .shake {
+      animation: shake .4s ease;
+    }
+  </style>
 </head>
 <body>
-  <main class="section">
-    <div class="container" style="max-width:460px;">
-      <article class="card">
-        <h1>Painel Administrativo</h1>
-        <p class="small">Acesso restrito</p>
-        <form id="login-form" class="form">
-          <label>Usuario
-            <input id="usuario" required>
-          </label>
-          <label>Senha
-            <input id="senha" type="password" required>
-          </label>
-          <button class="btn" type="submit"><i class="fa-solid fa-lock"></i> Entrar</button>
-        </form>
-      </article>
-    </div>
-  </main>
+  <div class="login-wrap">
+    <h1 class="logo">Barber<span>.CO</span></h1>
+    <article class="card" id="login-card">
+      <h2 class="titulo">Login Administrativo</h2>
+      <p class="subtitulo">Acesso restrito ao administrador</p>
 
-  <script src="../js/api.js"></script>
+      <form id="login-form" class="form">
+        <div class="form-group">
+          <label for="usuario">Usuário</label>
+          <input id="usuario" type="text" autocomplete="username" required>
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <input id="senha" type="password" autocomplete="current-password" required>
+        </div>
+
+        <button type="submit" class="btn">Entrar</button>
+        <p id="erro-login" class="erro"></p>
+      </form>
+    </article>
+  </div>
+
+  <script src="../js/auth.js"></script>
   <script>
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      try {
-        const usuario = document.getElementById("usuario").value;
-        const senha = document.getElementById("senha").value;
-        const data = await API.adminLogin(usuario, senha);
-        localStorage.setItem("adminToken", data.token);
+    if (isAdminLogado()) {
+      window.location.href = "painel.html";
+    }
+
+    const form = document.getElementById("login-form");
+    const erro = document.getElementById("erro-login");
+    const card = document.getElementById("login-card");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const usuario = document.getElementById("usuario").value.trim();
+      const senha = document.getElementById("senha").value;
+
+      if (fazerLogin(usuario, senha)) {
         window.location.href = "painel.html";
-      } catch (error) {
-        alert("Credenciais invalidas");
+        return;
       }
+
+      erro.textContent = "Usuário ou senha incorretos";
+      card.classList.remove("shake");
+      void card.offsetWidth;
+      card.classList.add("shake");
     });
   </script>
 </body>

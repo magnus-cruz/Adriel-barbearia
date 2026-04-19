@@ -4,11 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Barber.CO | Home</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/galeria.css">
 </head>
 <body>
   <header class="topbar">
@@ -77,7 +74,7 @@
       document.getElementById("preview-galeria").innerHTML = midias
         .filter((m) => m.tipo === "foto")
         .slice(0, 4)
-        .map((m) => `<img src="${m.url.startsWith('http') ? m.url : 'http://localhost:8080' + m.url}" alt="${m.titulo}">`)
+        .map((m) => `<img src="${window.resolveApiAssetUrl ? window.resolveApiAssetUrl(m.url) : m.url}" alt="${m.titulo}">`)
         .join("");
     }
     initHome();

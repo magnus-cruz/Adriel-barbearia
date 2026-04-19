@@ -18,6 +18,8 @@ import java.util.Map;
 @RequestMapping("/api/admin")
 public class AdminController {
 
+    private static final String ADMIN_TOKEN = "barberco-admin-2026";
+
     private final AdminSessionService adminSessionService;
     private final CatalogoService catalogoService;
     private final HorarioService horarioService;
@@ -88,6 +90,13 @@ public class AdminController {
         return horarioService.salvarConfiguracao(horarioDisponivel);
     }
 
+    @PostMapping("/horarios")
+    public HorarioDisponivel atualizarHorariosPost(@RequestHeader("Authorization") String authorization,
+                                                   @RequestBody HorarioDisponivel horarioDisponivel) {
+        validarToken(authorization);
+        return horarioService.salvarConfiguracao(horarioDisponivel);
+    }
+
     @GetMapping("/imprevistos")
     public List<Imprevisto> listarImprevistos(@RequestHeader("Authorization") String authorization) {
         validarToken(authorization);
@@ -146,19 +155,30 @@ public class AdminController {
         return agendamentoService.listarFuturos(dataMin);
     }
 
-    @PatchMapping("/agendamentos/{id}/cancelar")
-    public Agendamento cancelarAgendamento(@RequestHeader("Authorization") String authorization, @PathVariable Long id) {
+    @PutMapping("/agendamentos/{id}/cancelar")
+    public ResponseEntity<?> cancelarAgendamento(@RequestHeader("Authorization") String authorization, @PathVariable Long id) {
         validarToken(authorization);
-        return agendamentoService.cancelar(id);
+        Agendamento agendamento = agendamentoService.buscarPorId(id);
+
+        // Impede recancelamento para manter o fluxo do painel consistente.
+        if ("cancelado".equals(agendamento.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "error",
+                    "mensagem", "Este agendamento ja esta cancelado"
+            ));
+        }
+
+        return ResponseEntity.ok(agendamentoService.cancelar(id));
     }
 
     private void validarToken(String authorization) {
-        String token = null;
-        if (authorization != null && authorization.startsWith("Bearer ")) {
-            token = authorization.substring(7);
+        if (!tokenValido(authorization)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Nao autorizado.");
         }
-        if (!adminSessionService.isTokenValido(token)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token invalido ou expirado");
-        }
+    }
+
+    private boolean tokenValido(String header) {
+        if (header == null || header.isBlank()) return false;
+        return ADMIN_TOKEN.equals(header.replace("Bearer ", "").trim());
     }
 }

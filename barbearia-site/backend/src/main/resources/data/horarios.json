@@ -33,9 +33,9 @@
         "ativo" : true
       },
       "domingo" : {
-        "inicio" : null,
-        "fim" : null,
-        "ativo" : false
+        "inicio" : "10:00",
+        "fim" : "14:00",
+        "ativo" : true
       }
     }
   }

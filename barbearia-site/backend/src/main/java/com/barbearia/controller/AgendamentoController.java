@@ -7,12 +7,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/agendamentos")
+@RequestMapping("/api")
 public class AgendamentoController {
 
     private final AgendamentoService agendamentoService;
@@ -23,31 +22,28 @@ public class AgendamentoController {
         this.horarioService = horarioService;
     }
 
-    @GetMapping
-    public List<Agendamento> listarTodos(@RequestParam(required = false) String dataMinima) {
-        if (dataMinima == null || dataMinima.isBlank()) {
-            dataMinima = LocalDate.now().toString();
-        }
-        return agendamentoService.listarFuturos(dataMinima);
+    @GetMapping("/agendamentos")
+    public List<Agendamento> listarTodos() {
+        return agendamentoService.listarTodos();
     }
 
-    @GetMapping("/disponibilidade")
-    public Map<String, Object> disponibilidade(@RequestParam String data) {
-        List<String> horarios = horarioService.gerarHorariosDisponiveis(data, agendamentoService.listarTodos());
-        return Map.of("data", data, "horarios", horarios);
+    @GetMapping("/agendamentos/disponibilidade")
+    public Map<String, Object> disponibilidade(@RequestParam String data, @RequestParam(required = false) String servico) {
+        List<String> horarios = horarioService.gerarHorariosDisponiveis(data, servico == null ? "" : servico);
+        return Map.of("data", data, "horarios", horarios, "servico", servico == null ? "" : servico);
     }
 
-    @PostMapping
-    public Agendamento criar(@RequestBody Agendamento agendamento) {
+    @PostMapping("/agendamentos")
+    public Map<String, Object> criar(@RequestBody Agendamento agendamento) {
         try {
-            return agendamentoService.criar(agendamento);
+            return agendamentoService.criarComResposta(agendamento);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
-    @PatchMapping("/{id}/cancelar")
-    public Agendamento cancelar(@PathVariable Long id) {
+    @PatchMapping("/agendamentos/{id}/cancelar")
+    public Agendamento cancelarCompat(@PathVariable Long id) {
         try {
             return agendamentoService.cancelar(id);
         } catch (IllegalArgumentException e) {

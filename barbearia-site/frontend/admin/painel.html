@@ -4,142 +4,159 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin | Painel</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <script src="../js/auth.js"></script>
+  <script>exigirAdmin();</script>
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/galeria.css">
+  <link rel="stylesheet" href="../css/admin.css">
 </head>
 <body>
   <header class="topbar">
-    <div class="container">
+    <div class="container admin-container" style="display:flex;align-items:center;justify-content:space-between;gap:1rem;">
       <a class="brand" href="../index.html">Barber<span>.</span>CO Admin</a>
-      <button id="logout" class="btn secondary"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+      <button onclick="fazerLogout()"
+        style="
+          background: transparent;
+          border: 1px solid rgba(193,18,31,0.4);
+          color: rgba(253,240,213,0.6);
+          padding: .45rem 1rem;
+          font-family: 'Barlow', sans-serif;
+          font-size: .75rem;
+          font-weight: 600;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          border-radius: 2px;
+          cursor: pointer;
+          transition: all .2s;
+        "
+        onmouseover="this.style.background='rgba(193,18,31,0.2)';this.style.color='#fdf0d5'"
+        onmouseout="this.style.background='transparent';this.style.color='rgba(253,240,213,0.6)'">
+        Sair
+      </button>
     </div>
   </header>
 
   <main class="section">
-    <div class="container">
+    <div class="container admin-container">
       <h1>Painel de Administracao</h1>
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="tab-servicos">Servicos e Precos</button>
-        <button class="tab-btn" data-tab="tab-horarios">Horarios Disponiveis</button>
-        <button class="tab-btn" data-tab="tab-imprevistos">Imprevistos/Bloqueios</button>
-        <button class="tab-btn" data-tab="tab-galeria">Galeria</button>
-        <button class="tab-btn" data-tab="tab-cursos">Cursos</button>
-        <button class="tab-btn" data-tab="tab-agendamentos">Agendamentos</button>
+
+      <div class="tabs admin-tabs" aria-label="Abas do painel administrativo">
+        <button class="tab-btn admin-tab active" data-tab="tab-servicos">Servicos e Precos</button>
+        <button class="tab-btn admin-tab" data-tab="tab-horarios">Horarios Disponiveis</button>
+        <button class="tab-btn admin-tab" data-tab="tab-imprevistos">Imprevistos/Bloqueios</button>
+        <button class="tab-btn admin-tab" data-tab="tab-galeria">Galeria</button>
+        <button class="tab-btn admin-tab" data-tab="tab-cursos">Cursos</button>
+        <button class="tab-btn admin-tab" data-tab="tab-agendamentos">Agendamentos</button>
       </div>
 
       <section id="tab-servicos" class="tab-pane active card">
         <h2>Servicos e Precos</h2>
-        <form id="form-servico" class="form">
+        <form id="form-servico" class="admin-form">
           <input id="servico-id" type="hidden">
-          <label>Nome do Servico <input id="servico-nome" required></label>
-          <label>Preco (R$) <input id="servico-preco" type="number" step="0.01" required></label>
-          <label>Duracao (min) <input id="servico-duracao" type="number" required></label>
-          <label><input id="servico-ativo" type="checkbox" checked> Ativo</label>
-          <button class="btn" type="submit">Salvar servico</button>
+          <div class="form-group"><label>Nome do Servico</label><input id="servico-nome" required></div>
+          <div class="form-group"><label>Preco (R$)</label><input id="servico-preco" type="number" step="0.01" required></div>
+          <div class="form-group"><label>Duracao (min)</label><input id="servico-duracao" type="number" required></div>
+          <div class="form-group"><label><input id="servico-ativo" type="checkbox" checked> Ativo</label></div>
+          <button class="btn-add full" type="submit">Salvar servico</button>
         </form>
-        <table><thead><tr><th>Servico</th><th>Preco</th><th>Duracao</th><th>Acoes</th></tr></thead><tbody id="servicos-tabela"></tbody></table>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Servico</th><th>Preco</th><th>Duracao</th><th>Acoes</th></tr></thead><tbody id="servicos-tabela"></tbody></table></div>
       </section>
 
       <section id="tab-horarios" class="tab-pane card">
         <h2>Horarios Disponiveis</h2>
-        <p class="small">Edicao visual por dia da semana.</p>
-        <form id="form-horarios" class="form">
-          <label>Intervalo padrao (min)
-            <input id="horario-intervalo" type="number" min="5" step="5" required>
-          </label>
-          <label>Dia da semana
+        <form id="form-horarios" class="admin-form">
+          <div class="form-group"><label>Intervalo padrao (min)</label><input id="horario-intervalo" type="number" min="5" step="5" required></div>
+          <div class="form-group"><label>Dia da semana</label>
             <select id="horario-dia" required>
-              <option value="segunda">Segunda</option>
-              <option value="terca">Terca</option>
-              <option value="quarta">Quarta</option>
-              <option value="quinta">Quinta</option>
-              <option value="sexta">Sexta</option>
-              <option value="sabado">Sabado</option>
-              <option value="domingo">Domingo</option>
+              <option value="segunda">Segunda</option><option value="terca">Terca</option><option value="quarta">Quarta</option>
+              <option value="quinta">Quinta</option><option value="sexta">Sexta</option><option value="sabado">Sabado</option><option value="domingo">Domingo</option>
             </select>
-          </label>
-          <label>Inicio
-            <input id="horario-inicio" type="time">
-          </label>
-          <label>Fim
-            <input id="horario-fim" type="time">
-          </label>
-          <label><input id="horario-ativo" type="checkbox" checked> Dia ativo</label>
-          <button class="btn" type="submit">Salvar horario</button>
-          <button class="btn secondary" type="button" id="horarios-reset">Limpar formulario</button>
+          </div>
+          <div class="form-group"><label>Inicio</label><input id="horario-inicio" type="time"></div>
+          <div class="form-group"><label>Fim</label><input id="horario-fim" type="time"></div>
+          <div class="form-group full"><label><input id="horario-ativo" type="checkbox" checked> Dia ativo</label></div>
+          <button class="btn-add" type="submit">Salvar horario</button>
+          <button class="btn-acao btn-editar" type="button" id="horarios-reset">Limpar formulario</button>
         </form>
-        <table><thead><tr><th>Dia</th><th>Status</th><th>Inicio</th><th>Fim</th><th>Acoes</th></tr></thead><tbody id="horarios-preview"></tbody></table>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Dia</th><th>Status</th><th>Inicio</th><th>Fim</th><th>Acoes</th></tr></thead><tbody id="horarios-preview"></tbody></table></div>
       </section>
 
       <section id="tab-imprevistos" class="tab-pane card">
         <h2>Imprevistos / Bloqueios</h2>
-        <form id="form-imprevisto" class="form">
-          <label>Data <input id="imp-data" type="date" required></label>
-          <label>Periodo
-            <select id="imp-periodo">
-              <option value="manha">Manha</option>
-              <option value="tarde">Tarde</option>
-              <option value="dia_todo">Dia todo</option>
-            </select>
-          </label>
-          <label>Motivo <input id="imp-motivo" required></label>
-          <button class="btn" type="submit">Adicionar bloqueio</button>
+        <form id="form-imprevisto" class="admin-form">
+          <div class="form-group"><label>Data</label><input id="imp-data" type="date" required></div>
+          <div class="form-group"><label>Periodo</label><select id="imp-periodo"><option value="manha">Manha</option><option value="tarde">Tarde</option><option value="dia_todo">Dia todo</option></select></div>
+          <div class="form-group full"><label>Motivo</label><input id="imp-motivo" required></div>
+          <button class="btn-add full" type="submit">Adicionar bloqueio</button>
         </form>
-        <table><thead><tr><th>Data</th><th>Periodo</th><th>Motivo</th><th>Acoes</th></tr></thead><tbody id="imprevistos-lista"></tbody></table>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Data</th><th>Periodo</th><th>Motivo</th><th>Acoes</th></tr></thead><tbody id="imprevistos-lista"></tbody></table></div>
       </section>
 
       <section id="tab-galeria" class="tab-pane card">
         <h2>Galeria</h2>
-        <form id="form-foto" class="form">
-          <h3>Upload de imagem</h3>
-          <label>Arquivo <input id="foto-arquivo" type="file" accept="image/*" required></label>
-          <label>Categoria <input id="foto-categoria" required></label>
-          <label>Titulo <input id="foto-titulo" required></label>
-          <button class="btn" type="submit">Enviar foto</button>
+        <form id="form-foto" class="admin-form">
+          <div id="preview-wrap" class="full" style="display:none">
+            <p style="font-size:0.72rem;color:rgba(253,240,213,0.4);margin-bottom:0.5rem;letter-spacing:0.08em;text-transform:uppercase">Verifique antes de enviar</p>
+            <img id="preview-img" alt="preview">
+            <p id="preview-nome" style="font-size:.78rem;color:rgba(253,240,213,.4);margin-top:.4rem"></p>
+          </div>
+          <div class="form-group full"><label>Arquivo *</label><input id="input-arquivo" type="file" accept="image/jpeg,image/png,image/webp,video/mp4" required></div>
+          <div class="form-group"><label>Título da imagem *</label><input type="text" id="titulo-midia" placeholder="Ex: Corte degradê moderno" maxlength="60" required></div>
+          <div class="form-group"><label>Categoria *</label><select id="categoria-midia"><option value="galeria">Galeria</option><option value="cortes">Cortes</option><option value="barba">Barba</option><option value="degrade">Degradê</option><option value="eventos">Eventos</option></select></div>
+          <div id="upload-progress-wrap" class="full" style="display:none;margin-bottom:0.75rem">
+            <progress id="upload-progress" max="100" value="0" style="width:100%"></progress>
+            <p id="upload-progress-label" style="font-size:.82rem;color:rgba(253,240,213,.5)">0%</p>
+            <button id="upload-cancel" class="btn-acao btn-editar" type="button" style="display:none">Cancelar upload</button>
+          </div>
+          <button id="btn-enviar" disabled style="opacity:.4;cursor:not-allowed" class="btn-add full" type="submit">Enviar imagem</button>
         </form>
-        <form id="form-video" class="form">
-          <h3>Adicionar video YouTube</h3>
-          <label>Categoria <input id="video-categoria" required></label>
-          <label>Titulo <input id="video-titulo" required></label>
-          <label>URL Embed <input id="video-url" required></label>
-          <button class="btn" type="submit">Salvar video</button>
-        </form>
-        <table><thead><tr><th>Tipo</th><th>Categoria</th><th>Titulo</th><th>URL</th><th>Acoes</th></tr></thead><tbody id="midias-lista"></tbody></table>
+
+        <div id="galeria-contador" class="small"></div>
+        <div id="filtros" class="tabs"></div>
+        <div id="galeria-grid" class="gallery-grid"></div>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Tipo</th><th>Categoria</th><th>Titulo</th><th>Preview</th><th>Arquivo</th><th>Acoes</th></tr></thead><tbody id="midias-lista"></tbody></table></div>
       </section>
 
       <section id="tab-cursos" class="tab-pane card">
         <h2>Cursos</h2>
-        <form id="form-curso" class="form">
+        <form id="form-curso" class="admin-form">
           <input id="curso-id" type="hidden">
-          <label>Titulo <input id="curso-titulo" required></label>
-          <label>Descricao <textarea id="curso-descricao" required></textarea></label>
-          <label>Preco <input id="curso-preco" type="number" step="0.01" required></label>
-          <label>Carga Horaria <input id="curso-carga" required></label>
-          <label>URL da Imagem <input id="curso-imagem" required></label>
-          <label>Link de Compra <input id="curso-link" required></label>
-          <button class="btn" type="submit">Salvar curso</button>
+          <div class="form-group"><label>Titulo</label><input id="curso-titulo" required></div>
+          <div class="form-group"><label>Preco</label><input id="curso-preco" type="number" step="0.01" required></div>
+          <div class="form-group"><label>Carga Horaria</label><input id="curso-carga" required></div>
+          <div class="form-group full"><label>Descricao</label><textarea id="curso-descricao" required></textarea></div>
+          <div class="form-group"><label>URL da Imagem</label><input id="curso-imagem" required></div>
+          <div class="form-group"><label>Link de Compra</label><input id="curso-link" required></div>
+          <button class="btn-add full" type="submit">Salvar curso</button>
         </form>
-        <table><thead><tr><th>Titulo</th><th>Preco</th><th>Carga</th><th>Acoes</th></tr></thead><tbody id="cursos-lista"></tbody></table>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Titulo</th><th>Preco</th><th>Carga</th><th>Acoes</th></tr></thead><tbody id="cursos-lista"></tbody></table></div>
       </section>
 
       <section id="tab-agendamentos" class="tab-pane card">
         <h2>Agendamentos</h2>
-        <div class="filter-row">
-          <label>Filtrar por data minima<input id="filtro-data" type="date"></label>
-          <button id="btn-filtrar-data" class="btn secondary" type="button">Aplicar filtro</button>
+        <div class="admin-form" style="margin-bottom:1rem;">
+          <div class="form-group"><label>Filtrar por data minima</label><input id="filtro-data" type="date"></div>
+          <div class="form-group"><label>Status</label><select id="filtro-status" onchange="filtrarAgendamentos()"><option value="todos">Todos</option><option value="confirmado">Confirmados</option><option value="pendente">Pendentes</option><option value="cancelado">Cancelados</option></select></div>
+          <button id="btn-filtrar-data" class="btn-add full" type="button">Aplicar filtro</button>
         </div>
-        <table>
-          <thead><tr><th>Cliente</th><th>Servico</th><th>Data</th><th>Horario</th><th>Status</th><th>Acoes</th></tr></thead>
-          <tbody id="agendamentos-lista"></tbody>
-        </table>
+        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Cliente</th><th>Servico</th><th>Data</th><th>Horario</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="agendamentos-lista"></tbody></table></div>
       </section>
     </div>
   </main>
 
+  <div id="lightbox" class="lightbox" aria-hidden="true">
+    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Fechar imagem">&times;</button>
+    <button type="button" class="lightbox-nav lightbox-nav--prev" data-lightbox-prev aria-label="Imagem anterior">&#8249;</button>
+    <figure class="lightbox-panel">
+      <img alt="Imagem ampliada">
+      <figcaption class="lightbox-caption"></figcaption>
+    </figure>
+    <button type="button" class="lightbox-nav lightbox-nav--next" data-lightbox-next aria-label="Próxima imagem">&#8250;</button>
+  </div>
+
+  <script src="../js/auth.js"></script>
   <script src="../js/api.js"></script>
+  <script src="../js/galeria.js"></script>
   <script src="../js/admin.js"></script>
 </body>
 </html>

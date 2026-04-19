@@ -3,6 +3,8 @@ C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbea
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\controller\AdminController.java
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\controller\AgendamentoController.java
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\controller\CursoController.java
+C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\controller\HealthController.java
+C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\controller\HorarioController.java
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\controller\MidiaController.java
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\controller\ServicoController.java
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\model\Agendamento.java
@@ -16,3 +18,4 @@ C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbea
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\service\CatalogoService.java
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\service\HorarioService.java
 C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\service\JsonDataStore.java
+C:\Users\beatr\Documents\Trabalhos\trabalhos de web\Serviços\Adriel-Alfa\barbearia-site\backend\src\main\java\com\barbearia\service\MidiaService.java

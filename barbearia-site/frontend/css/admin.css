@@ -1,0 +1,313 @@
+/* Paleta oficial do painel */
+:root {
+  --molten: #780000;
+  --brick: #c1121f;
+  --cream: #fdf0d5;
+  --deep: #003049;
+  --ink: #040c10;
+}
+
+/* === TABS SEM QUEBRA === */
+.admin-tabs {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(253, 240, 213, .07);
+  scrollbar-width: none;
+}
+
+.admin-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-tab {
+  flex-shrink: 0;
+  padding: .7rem 1.1rem;
+  font-size: .76rem;
+  font-weight: 500;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: rgba(253, 240, 213, .4);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  background: none;
+  font-family: "Barlow", "Segoe UI", sans-serif;
+  transition: all .2s;
+  white-space: nowrap;
+}
+
+.admin-tab.active {
+  color: #c1121f;
+  border-bottom-color: #c1121f;
+}
+
+/* === FORMULÁRIOS === */
+.admin-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.5rem;
+  max-width: 680px;
+}
+
+.admin-form .full {
+  grid-column: span 2;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+.form-group label {
+  font-size: .7rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(253, 240, 213, .45);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: rgba(4, 12, 16, .7);
+  border: 1px solid rgba(253, 240, 213, .1);
+  color: #fdf0d5;
+  padding: .65rem .9rem;
+  font-family: "Barlow", "Segoe UI", sans-serif;
+  font-size: .88rem;
+  border-radius: 2px;
+  outline: none;
+  width: 100%;
+  transition: border-color .2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: rgba(193, 18, 31, .5);
+}
+
+/* === TABELAS === */
+.admin-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid rgba(0, 48, 73, .4);
+  border-radius: 3px;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .83rem;
+  min-width: 520px;
+}
+
+.admin-table th {
+  text-align: left;
+  padding: .6rem .9rem;
+  font-size: .68rem;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: rgba(253, 240, 213, .35);
+  border-bottom: 1px solid rgba(253, 240, 213, .06);
+  background: rgba(0, 48, 73, .2);
+  white-space: nowrap;
+}
+
+.admin-table td {
+  padding: .7rem .9rem;
+  color: rgba(253, 240, 213, .75);
+  border-bottom: 1px solid rgba(253, 240, 213, .04);
+  vertical-align: middle;
+}
+
+.admin-table tr:hover td {
+  background: rgba(0, 48, 73, .15);
+}
+
+/* === BOTÕES DE AÇÃO === */
+.btn-acao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .35rem .8rem;
+  font-family: "Barlow", "Segoe UI", sans-serif;
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  min-width: 64px;
+  white-space: nowrap;
+  transition: all .2s;
+}
+
+.btn-editar {
+  background: transparent;
+  border: 1px solid rgba(0, 48, 73, .8);
+  color: rgba(253, 240, 213, .6);
+}
+
+.btn-editar:hover {
+  background: rgba(0, 48, 73, .5);
+  color: #fdf0d5;
+}
+
+.btn-excluir-tabela {
+  background: rgba(120, 0, 0, .25);
+  border: 1px solid rgba(193, 18, 31, .3);
+  color: #c1121f;
+}
+
+.btn-excluir-tabela:hover {
+  background: rgba(193, 18, 31, .4);
+  color: #fdf0d5;
+}
+
+.acoes-cell {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-add {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: #c1121f;
+  color: #fdf0d5;
+  border: none;
+  padding: .6rem 1.2rem;
+  font-family: "Barlow", "Segoe UI", sans-serif;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  cursor: pointer;
+  margin-bottom: 1.2rem;
+  transition: background .2s;
+}
+
+.btn-add:hover {
+  background: #780000;
+}
+
+/* === MODAL EXCLUSÃO === */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 12, 16, .88);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn .2s ease;
+}
+
+.modal-card {
+  background: #003049;
+  border: 1px solid rgba(193, 18, 31, .5);
+  border-radius: 4px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 400px;
+  animation: scaleIn .2s ease;
+}
+
+.modal-titulo {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.2rem;
+  color: #fdf0d5;
+  margin-bottom: .6rem;
+}
+
+.modal-mensagem {
+  font-size: .88rem;
+  color: rgba(253, 240, 213, .6);
+  line-height: 1.6;
+  margin-bottom: 1.8rem;
+}
+
+.modal-acoes {
+  display: flex;
+  gap: .8rem;
+  justify-content: flex-end;
+}
+
+.btn-modal-cancelar {
+  background: transparent;
+  border: 1px solid rgba(253, 240, 213, .25);
+  color: rgba(253, 240, 213, .65);
+  padding: .6rem 1.3rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: "Barlow", "Segoe UI", sans-serif;
+  font-size: .82rem;
+  transition: all .2s;
+}
+
+.btn-modal-cancelar:hover {
+  border-color: rgba(253, 240, 213, .5);
+  color: #fdf0d5;
+}
+
+.btn-modal-excluir {
+  background: #c1121f;
+  border: none;
+  color: #fdf0d5;
+  padding: .6rem 1.3rem;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: "Barlow", "Segoe UI", sans-serif;
+  font-size: .82rem;
+  font-weight: 600;
+  transition: background .2s;
+}
+
+.btn-modal-excluir:hover {
+  background: #780000;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* === RESPONSIVO === */
+@media (max-width: 768px) {
+  .admin-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-form .full {
+    grid-column: span 1;
+  }
+
+  .admin-tab {
+    padding: .65rem .85rem;
+    font-size: .7rem;
+  }
+}

@@ -4,13 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Barber.CO | Galeria</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/galeria.css">
 </head>
-<body>
+<body class="pagina-publica">
   <header class="topbar">
     <div class="container">
       <a class="brand" href="index.html">Barber<span>.</span>CO</a>
@@ -28,15 +25,23 @@
   <main class="section">
     <div class="container">
       <h1>Galeria de Estilo</h1>
+      <div id="galeria-contador" class="small"></div>
       <div id="filtros" class="tabs"></div>
       <div id="galeria-grid" class="gallery-grid"></div>
     </div>
   </main>
 
-  <div id="lightbox" class="lightbox">
-    <img alt="Imagem ampliada">
+  <div id="lightbox" class="lightbox" aria-hidden="true">
+    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Fechar imagem">&times;</button>
+    <button type="button" class="lightbox-nav lightbox-nav--prev" data-lightbox-prev aria-label="Imagem anterior">&#8249;</button>
+    <figure class="lightbox-panel">
+      <img alt="Imagem ampliada">
+      <figcaption class="lightbox-caption"></figcaption>
+    </figure>
+    <button type="button" class="lightbox-nav lightbox-nav--next" data-lightbox-next aria-label="Próxima imagem">&#8250;</button>
   </div>
 
+  <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/whatsapp.js"></script>
   <script src="js/galeria.js"></script>

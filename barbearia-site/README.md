@@ -59,6 +59,23 @@ java -jar target/backend-1.0.0.jar
 1. Abra a pasta `barbearia-site/frontend` com Live Server ou outro servidor estatico.
 2. Acesse `index.html`.
 
+## Inicializacao automatica no VS Code (API + Frontend)
+
+Para subir tudo de uma vez no VS Code:
+
+1. Abra `Terminal > Run Task...`
+2. Execute a task `Barbearia: Tudo (API + Frontend)`
+3. Abra `http://localhost:5500/index.html`
+
+Tasks disponiveis:
+
+- `Barbearia: Backend API` (sobe API Java)
+- `Barbearia: Frontend estatico` (sobe servidor estatico)
+- `Barbearia: Tudo (API + Frontend)` (sobe ambos)
+- `Barbearia: Abrir frontend` (abre o navegador em localhost:5500)
+
+Observacao: o clique direto no botao "Go Live" do Live Server nao dispara o backend Java automaticamente. Para comportamento de "um clique", use a task `Barbearia: Tudo (API + Frontend)`.
+
 ## Credenciais do admin
 
 - Usuario: `admin`

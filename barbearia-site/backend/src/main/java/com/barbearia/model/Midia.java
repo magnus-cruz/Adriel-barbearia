@@ -1,29 +1,43 @@
 package com.barbearia.model;
 
 public class Midia {
-    private Long id;
+    private String id;
+    private String nomeArquivo;
     private String tipo;
     private String categoria;
     private String titulo;
     private String url;
+    private Long tamanhoKb;
+    private String dataUpload;
 
     public Midia() {
     }
 
-    public Midia(Long id, String tipo, String categoria, String titulo, String url) {
+    public Midia(String id, String nomeArquivo, String tipo, String categoria, String titulo, String url, Long tamanhoKb, String dataUpload) {
         this.id = id;
+        this.nomeArquivo = nomeArquivo;
         this.tipo = tipo;
         this.categoria = categoria;
         this.titulo = titulo;
         this.url = url;
+        this.tamanhoKb = tamanhoKb;
+        this.dataUpload = dataUpload;
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
+    }
+
+    public String getNomeArquivo() {
+        return nomeArquivo;
+    }
+
+    public void setNomeArquivo(String nomeArquivo) {
+        this.nomeArquivo = nomeArquivo;
     }
 
     public String getTipo() {
@@ -56,5 +70,21 @@ public class Midia {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+    public Long getTamanhoKb() {
+        return tamanhoKb;
+    }
+
+    public void setTamanhoKb(Long tamanhoKb) {
+        this.tamanhoKb = tamanhoKb;
+    }
+
+    public String getDataUpload() {
+        return dataUpload;
+    }
+
+    public void setDataUpload(String dataUpload) {
+        this.dataUpload = dataUpload;
     }
 }
