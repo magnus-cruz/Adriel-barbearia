@@ -1,23 +1,34 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Barber.CO | Galeria</title>
+  <title>Alpha Barber | Galeria</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/galeria.css">
 </head>
 <body class="pagina-publica">
   <header class="topbar">
     <div class="container">
-      <a class="brand" href="index.html">Barber<span>.</span>CO</a>
+      <div class="logo-alpha-barber">
+  <img src="/img/logo-alpha-barber.png"
+       alt="Alpha Barber"
+       onerror="this.style.display='none';
+         this.nextElementSibling.style.display='flex'">
+  <div class="logo-texto" style="display:none">
+    <span class="logo-alpha">ALPHA</span>
+    <span class="logo-barber">
+      <span class="logo-accent">B</span>ARBER
+    </span>
+  </div>
+</div>
       <nav class="nav-links">
         <a href="index.html">Home</a>
         <a href="agendar.html">Agendar</a>
         <a class="active" href="galeria.html">Galeria</a>
         <a href="cursos.html">Cursos</a>
         <a href="localizacao.html">Localizacao</a>
-        <a href="admin/login.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
+        <a class="btn-admin-nav" href="admin/login.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
       </nav>
     </div>
   </header>
@@ -38,7 +49,7 @@
       <img alt="Imagem ampliada">
       <figcaption class="lightbox-caption"></figcaption>
     </figure>
-    <button type="button" class="lightbox-nav lightbox-nav--next" data-lightbox-next aria-label="Próxima imagem">&#8250;</button>
+    <button type="button" class="lightbox-nav lightbox-nav--next" data-lightbox-next aria-label="PrÃ³xima imagem">&#8250;</button>
   </div>
 
   <script src="js/auth.js"></script>
@@ -47,3 +58,4 @@
   <script src="js/galeria.js"></script>
 </body>
 </html>
+

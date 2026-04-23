@@ -1,4 +1,4 @@
-function requireAuth() {
+﻿function requireAuth() {
   if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
     window.location.href = "login.html";
   }
@@ -16,6 +16,7 @@ async function validarSessaoAdmin() {
 let horariosConfigCache = null;
 let selectedUploadFile = null;
 let agendamentosCache = [];
+window.arquivoSelecionado = null;
 
 const abaFuncoes = {
   "tab-servicos": () => carregarServicos(),
@@ -27,11 +28,54 @@ const abaFuncoes = {
 };
 
 function mostrarSucesso(mensagem) {
-  alert(mensagem);
+  mostrarToast(mensagem, "sucesso");
 }
 
 function mostrarErro(mensagem) {
-  alert(mensagem);
+  mostrarToast(mensagem, "erro");
+}
+
+function mostrarToast(msg, tipo) {
+  const cores = {
+    sucesso: {
+      bg: "rgba(23,23,20,0.97)",
+      borda: "var(--dark-goldenrod)",
+      texto: "var(--pale-oak)"
+    },
+    erro: {
+      bg: "rgba(23,23,20,0.97)",
+      borda: "#e05555",
+      texto: "#e05555"
+    }
+  };
+  const c = cores[tipo] || cores.sucesso;
+
+  const toast = document.createElement("div");
+  toast.style.cssText = `
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    background: ${c.bg};
+    border-left: 3px solid ${c.borda};
+    color: ${c.texto};
+    padding: 0.9rem 1.4rem;
+    border-radius: 4px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    z-index: 99998;
+    max-width: 320px;
+    line-height: 1.5;
+    box-shadow: 2px 2px 12px rgba(0,0,0,0.5);
+    animation: slideInToast 0.3s ease;
+  `;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = "slideOutToast 0.3s ease forwards";
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
 }
 
 function renderEstadoTabela(tbody, colunas, mensagem, cor = "rgba(253,240,213,.3)") {
@@ -53,64 +97,125 @@ function atualizarEstadoBotaoUpload(ativo) {
   botao.style.cursor = ativo ? "pointer" : "not-allowed";
 }
 
+function atualizarProgresso(pct) {
+  const wrap = document.getElementById("progress-wrap");
+  const fill = document.getElementById("progress-fill");
+  const label = document.getElementById("progress-pct");
+
+  if (wrap) wrap.style.display = "block";
+  if (fill) fill.style.width = `${pct}%`;
+  if (label) label.textContent = `${pct}%`;
+}
+
+function resetarProgresso() {
+  atualizarProgresso(0);
+  const wrap = document.getElementById("progress-wrap");
+  if (wrap) wrap.style.display = "none";
+}
+
 function limparPreviewUpload() {
   selectedUploadFile = null;
+  window.arquivoSelecionado = null;
 
-  const input = document.getElementById("input-arquivo");
+  const input = document.getElementById("file-upload");
   const previewWrap = document.getElementById("preview-wrap");
   const previewImg = document.getElementById("preview-img");
   const previewNome = document.getElementById("preview-nome");
+  const dropZone = document.getElementById("drop-zone");
+  const textoPrincipal = dropZone?.querySelector(".text span");
+  const botao = document.getElementById("btn-enviar");
 
   if (input) input.value = "";
   if (previewWrap) previewWrap.style.display = "none";
   if (previewImg) previewImg.src = "";
   if (previewNome) previewNome.textContent = "";
-  atualizarEstadoBotaoUpload(false);
+  if (textoPrincipal) textoPrincipal.textContent = "Clique ou arraste a imagem aqui";
+  if (dropZone) {
+    dropZone.classList.remove("drag-over");
+    dropZone.style.borderColor = "var(--taupe)";
+  }
+  if (botao) {
+    botao.disabled = true;
+    botao.style.opacity = "0.4";
+    botao.style.cursor = "not-allowed";
+  }
 }
 
-function configurarUploadImagem() {
-  const input = document.getElementById("input-arquivo");
-  const titulo = document.getElementById("titulo-midia");
-  const categoria = document.getElementById("categoria-midia");
+function processarArquivo(arquivo) {
+  const dropZone = document.getElementById("drop-zone");
   const previewWrap = document.getElementById("preview-wrap");
   const previewImg = document.getElementById("preview-img");
   const previewNome = document.getElementById("preview-nome");
+  const textoPrincipal = dropZone?.querySelector(".text span");
 
-  if (!input) return;
+  if (!arquivo) {
+    limparPreviewUpload();
+    return;
+  }
 
-  if (titulo) titulo.required = true;
-  if (categoria) categoria.required = true;
+  const tiposPermitidos = ["image/jpeg", "image/png", "image/webp", "video/mp4"];
+  if (!tiposPermitidos.includes(arquivo.type)) {
+    mostrarErro("Tipo nÃ£o permitido. Use JPG, PNG, WEBP ou MP4.");
+    limparPreviewUpload();
+    return;
+  }
+
+  if (arquivo.size > 10 * 1024 * 1024) {
+    mostrarErro("Arquivo muito grande. MÃ¡ximo de 10MB.");
+    limparPreviewUpload();
+    return;
+  }
+
+  selectedUploadFile = arquivo;
+  window.arquivoSelecionado = arquivo;
+
+  const leitor = new FileReader();
+  leitor.onload = (event) => {
+    if (previewImg) previewImg.src = event.target.result;
+    if (previewNome) {
+      previewNome.textContent = `${arquivo.name} â€” ${(arquivo.size / 1024).toFixed(0)} KB`;
+    }
+    if (previewWrap) previewWrap.style.display = "block";
+    if (textoPrincipal) textoPrincipal.textContent = `âœ“ ${arquivo.name}`;
+    if (dropZone) dropZone.style.borderColor = "var(--dark-goldenrod)";
+    atualizarEstadoBotaoUpload(true);
+  };
+  leitor.readAsDataURL(arquivo);
+}
+
+function configurarUploadImagem() {
+  const dropZone = document.getElementById("drop-zone");
+  const input = document.getElementById("file-upload");
+
+  if (!dropZone || !input) return;
+
   limparPreviewUpload();
 
+  dropZone.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    dropZone.classList.add("drag-over");
+  });
+
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.classList.remove("drag-over");
+  });
+
+  dropZone.addEventListener("drop", (event) => {
+    event.preventDefault();
+    dropZone.classList.remove("drag-over");
+    const arquivo = event.dataTransfer?.files?.[0];
+    if (arquivo) {
+      processarArquivo(arquivo);
+    }
+  });
+
   input.addEventListener("change", () => {
-    const file = input.files && input.files[0];
-    if (!file) {
+    const arquivo = input.files && input.files[0];
+    if (arquivo) {
+      processarArquivo(arquivo);
+    } else {
       limparPreviewUpload();
-      return;
     }
-
-    const tiposPermitidos = ["image/jpeg", "image/png", "image/webp", "video/mp4"];
-    if (!tiposPermitidos.includes(file.type)) {
-      mostrarErro("Tipo nao permitido. Use JPG, PNG, WEBP ou MP4.");
-      limparPreviewUpload();
-      return;
-    }
-
-    if (file.size > 10 * 1024 * 1024) {
-      mostrarErro("Arquivo muito grande. Maximo de 10MB.");
-      limparPreviewUpload();
-      return;
-    }
-
-    selectedUploadFile = file;
-    const leitor = new FileReader();
-    leitor.onload = (event) => {
-      if (previewImg) previewImg.src = event.target.result;
-      if (previewNome) previewNome.textContent = `${file.name} — ${Math.round(file.size / 1024)} KB`;
-      if (previewWrap) previewWrap.style.display = "block";
-      atualizarEstadoBotaoUpload(true);
-    };
-    leitor.readAsDataURL(file);
   });
 }
 
@@ -165,7 +270,7 @@ function abrirModalExcluir(nomeArquivo, cardElement) {
       <div class="modal-titulo">Excluir imagem</div>
       <div class="modal-mensagem">
         Tem certeza que deseja excluir esta imagem?<br>
-        <strong style="color:#fdf0d5">${nomeArquivo}</strong><br>
+        <strong style="color:var(--pale-oak)">${nomeArquivo}</strong><br>
         Esta acao nao pode ser desfeita.
       </div>
       <div class="modal-acoes">
@@ -228,7 +333,7 @@ async function carregarServicos() {
     </tr>
   `).join("");
   } catch (erro) {
-    renderEstadoTabela(tabela, 4, `Erro ao carregar. <br><small>${erro?.message || "Falha na API."}</small>`, "#c1121f");
+    renderEstadoTabela(tabela, 4, `Erro ao carregar. <br><small>${erro?.message || "Falha na API."}</small>`, "#e05555");
   }
 }
 
@@ -297,7 +402,7 @@ async function carregarHorarios() {
 
     preencherFormularioHorario(document.getElementById("dia-semana").value);
   } catch (erro) {
-    renderEstadoTabela(tabela, 5, `Erro ao carregar horarios.<br><small>${erro?.message || "falha na API"}</small>`, "#c1121f");
+    renderEstadoTabela(tabela, 5, `Erro ao carregar horarios.<br><small>${erro?.message || "falha na API"}</small>`, "#e05555");
   }
 }
 
@@ -374,7 +479,7 @@ async function carregarImprevistos() {
     </tr>
   `).join("");
   } catch (erro) {
-    renderEstadoTabela(tabela, 4, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#c1121f");
+    renderEstadoTabela(tabela, 4, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#e05555");
   }
 }
 
@@ -489,7 +594,7 @@ function diagnosticarToken() {
 async function uploadFoto(e) {
   e.preventDefault();
 
-  const arquivo = selectedUploadFile || document.getElementById("input-arquivo")?.files?.[0];
+  const arquivo = window.arquivoSelecionado || selectedUploadFile || document.getElementById("file-upload")?.files?.[0];
   const titulo = (document.getElementById("titulo-midia")?.value || "").trim();
   const categoria = document.getElementById("categoria-midia")?.value || "galeria";
 
@@ -506,24 +611,14 @@ async function uploadFoto(e) {
   if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
     mostrarErro("Faca login como administrador primeiro.");
     setTimeout(() => {
-      window.location.href = "/admin/login.html";
+      window.location.href = "login.html";
     }, 1500);
     return;
   }
 
-  const progressWrap = document.getElementById("upload-progress-wrap");
-  const progress = document.getElementById("upload-progress");
-  const progressLabel = document.getElementById("upload-progress-label");
-  const cancelButton = document.getElementById("upload-cancel");
-
+  const progressWrap = document.getElementById("progress-wrap");
   if (progressWrap) progressWrap.style.display = "block";
-  if (cancelButton) cancelButton.style.display = "inline-flex";
-  if (progress) progress.value = 0;
-  if (progressLabel) progressLabel.textContent = "0%";
-
-  if (cancelButton) {
-    cancelButton.onclick = () => mostrarErro("Cancelamento indisponivel neste modo de upload.");
-  }
+  atualizarProgresso(0);
 
   try {
     const online = await API.checkServerOnline();
@@ -531,14 +626,12 @@ async function uploadFoto(e) {
       throw new Error("Spring Boot nao esta rodando. Inicie o servidor.");
     }
 
-    const payload = await uploadMidia(arquivo, titulo, categoria, (percentual) => {
-      if (progress) progress.value = percentual;
-      if (progressLabel) progressLabel.textContent = `${percentual}%`;
+    await uploadMidia(arquivo, titulo, categoria, (percentual) => {
+      atualizarProgresso(percentual);
     });
 
     await API.carregarGaleria();
-    mostrarSucesso("Imagem adicionada a galeria!");
-    mostrarSucesso(`Upload concluido com sucesso. URL: ${payload?.arquivo?.url || "(sem URL)"}`);
+    mostrarSucesso("Imagem adicionada Ã  galeria com sucesso!");
     e.target.reset();
     limparPreviewUpload();
   } catch (error) {
@@ -552,8 +645,7 @@ async function uploadFoto(e) {
     }
     mostrarErro(`Erro no upload: ${message}`);
   } finally {
-    if (cancelButton) cancelButton.style.display = "none";
-    if (progressWrap) progressWrap.style.display = "none";
+    resetarProgresso();
   }
 }
 
@@ -595,7 +687,7 @@ async function carregarCursos() {
     </tr>
   `).join("");
   } catch (erro) {
-    renderEstadoTabela(tabela, 4, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#c1121f");
+    renderEstadoTabela(tabela, 4, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#e05555");
   }
 }
 
@@ -650,7 +742,7 @@ async function carregarAgendamentos() {
     filtrarAgendamentos();
   } catch (erro) {
     if (tabela) {
-      renderEstadoTabela(tabela, 6, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#c1121f");
+      renderEstadoTabela(tabela, 6, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#e05555");
     }
   }
 }
@@ -666,11 +758,11 @@ function badgeStatus(status) {
   const estilos = {
     confirmado: "color:#4caf50",
     pendente: "color:#f59e0b",
-    cancelado: "color:#c1121f",
-    concluido: "color:rgba(253,240,213,0.4)"
+    cancelado: "color:#e05555",
+    concluido: "color:rgba(207,189,166,0.4)"
   };
   const estilo = estilos[valor] || estilos.pendente;
-  return `<span style="font-size:0.82rem;${estilo}">● ${valor}</span>`;
+  return `<span style="font-size:0.82rem;${estilo}">â— ${valor}</span>`;
 }
 
 function renderizarAgendamento(ag) {
@@ -769,3 +861,5 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Carrega dados da primeira aba no startup.
   await carregarServicos();
 });
+
+

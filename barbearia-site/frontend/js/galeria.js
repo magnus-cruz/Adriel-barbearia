@@ -1,4 +1,4 @@
-// Estado global da galeria para filtros e lightbox.
+﻿// Estado global da galeria para filtros e lightbox.
 const galeriaState = {
   itens: [],
   filtro: "todos",
@@ -31,7 +31,7 @@ function categoriaLabel(categoria) {
     galeria: "Galeria",
     cortes: "Cortes",
     barba: "Barba",
-    degrade: "Degradê",
+    degrade: "DegradÃª",
     eventos: "Eventos"
   };
   const chave = String(categoria || "galeria").toLowerCase();
@@ -40,7 +40,7 @@ function categoriaLabel(categoria) {
 
 function normalizarItem(item) {
   const categoria = String(item?.categoria || "galeria").toLowerCase();
-  const titulo = String(item?.titulo || item?.nomeArquivo || "Sem título").trim();
+  const titulo = String(item?.titulo || item?.nomeArquivo || "Sem tÃ­tulo").trim();
   const url = String(item?.url || "").trim();
   const nomeArquivo = String(item?.nomeArquivo || (url.split("/").pop() || "")).trim();
 
@@ -158,7 +158,7 @@ function renderTabelaAdmin(itens) {
 function imgFallback(elemento) {
   const wrap = elemento.closest(".card-img-wrap") || elemento.parentElement;
   if (!wrap) return;
-  wrap.innerHTML = '<div class="img-fallback">Imagem indisponível</div>';
+  wrap.innerHTML = '<div class="img-fallback">Imagem indisponÃ­vel</div>';
 }
 
 function bindAcoesCards() {
@@ -193,8 +193,8 @@ function abrirModalExcluir(nomeArquivo, cardElement) {
       <div class="modal-titulo">Excluir imagem</div>
       <div class="modal-mensagem">
         Tem certeza que deseja excluir esta imagem?<br>
-        <strong style="color:#fdf0d5">${escapeHtml(nomeArquivo)}</strong><br>
-        Esta ação não pode ser desfeita.
+        <strong style="color:var(--pale-oak)">${escapeHtml(nomeArquivo)}</strong><br>
+        Esta aÃ§Ã£o nÃ£o pode ser desfeita.
       </div>
       <div class="modal-acoes">
         <button class="btn-modal-cancelar" id="btn-cancelar-modal" type="button">Cancelar</button>
@@ -231,7 +231,7 @@ function abrirModalExcluir(nomeArquivo, cardElement) {
 
 async function excluirImagem(nomeArquivo, cardEl) {
   if (!isAdminLogado()) {
-    mostrarErro("Acesso negado. Faça login como admin.");
+    mostrarErro("Acesso negado. FaÃ§a login como admin.");
     setTimeout(() => window.location.href = "/admin/login.html", 1500);
     return;
   }
@@ -246,7 +246,7 @@ async function excluirImagem(nomeArquivo, cardEl) {
     });
 
     if (res.status === 401) {
-      mostrarErro("Sessão expirada. Faça login novamente.");
+      mostrarErro("SessÃ£o expirada. FaÃ§a login novamente.");
       fazerLogout();
       return;
     }
@@ -273,7 +273,7 @@ async function excluirImagem(nomeArquivo, cardEl) {
       }, 300);
     }
 
-    mostrarSucesso("Imagem excluída com sucesso!");
+    mostrarSucesso("Imagem excluÃ­da com sucesso!");
     await carregarGaleriaAdmin();
   } catch (e) {
     mostrarErro(e.message.includes("fetch")
@@ -408,3 +408,4 @@ window.carregarGaleriaAdmin = carregarGaleriaAdmin;
 window.carregarGaleria = carregarGaleria;
 
 document.addEventListener("DOMContentLoaded", carregarGaleria);
+

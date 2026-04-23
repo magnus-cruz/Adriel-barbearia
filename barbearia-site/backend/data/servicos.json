@@ -22,4 +22,10 @@
   "preco" : 25.0,
   "duracaoMinutos" : 15,
   "ativo" : true
+}, {
+  "id" : 5,
+  "nome" : "teste",
+  "preco" : 25.0,
+  "duracaoMinutos" : 15,
+  "ativo" : true
 } ]

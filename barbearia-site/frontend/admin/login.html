@@ -3,14 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Barber.CO | Login Admin</title>
+  <title>Alpha Barber | Login Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --molten: #780000;
-      --brick: #c1121f;
-      --cream: #fdf0d5;
-      --deep: #003049;
-      --ink: #040c10;
+      --black: #000000;
+      --carbon-black: #171714;
+      --pale-oak: #CFBDA6;
+      --taupe: #443A2E;
+      --dark-goldenrod: #C28730;
     }
 
     * {
@@ -21,107 +24,233 @@
 
     body {
       min-height: 100vh;
-      background: radial-gradient(circle at top right, rgba(193, 18, 31, 0.18), transparent 40%), var(--ink);
-      color: var(--cream);
-      display: grid;
-      place-items: center;
-      font-family: "Barlow", "Segoe UI", sans-serif;
-      padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      background: var(--black);
+      background-image: repeating-linear-gradient(
+        45deg,
+        rgba(194, 135, 48, 0.03) 0px,
+        rgba(194, 135, 48, 0.03) 1px,
+        transparent 1px,
+        transparent 12px
+      );
+      font-family: 'Barlow', sans-serif;
+      color: var(--pale-oak);
     }
 
     .login-wrap {
       width: 100%;
-      max-width: 420px;
+      max-width: 340px;
     }
 
-    .logo {
-      text-align: center;
-      font-family: "Playfair Display", Georgia, serif;
-      font-size: 2rem;
-      margin-bottom: 1rem;
-      letter-spacing: .04em;
+    .container {
+      width: 340px;
+      position: relative;
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--carbon-black);
+      color: var(--pale-oak);
+      box-shadow:
+        1.5px 1.5px 3px #0e0e0e,
+        -1.5px -1.5px 3px rgba(95, 94, 94, 0.25),
+        inset 0px 0px 0px #0e0e0e,
+        inset 0px 0px 0px #5f5e5e;
+      border: 1px solid var(--taupe);
     }
 
-    .logo span {
-      color: var(--brick);
-    }
-
-    .card {
-      background: var(--deep);
-      border: 1px solid rgba(193, 18, 31, 0.35);
-      border-radius: 6px;
-      padding: 1.4rem;
-      box-shadow: 0 10px 36px rgba(0, 0, 0, .38);
-    }
-
-    .titulo {
-      font-family: "Playfair Display", Georgia, serif;
-      font-size: 1.4rem;
-      margin-bottom: .2rem;
-    }
-
-    .subtitulo {
-      color: rgba(253, 240, 213, 0.6);
-      font-size: .86rem;
-      margin-bottom: 1rem;
+    .container::before {
+      content: '';
+      display: block;
+      height: 3px;
+      background: var(--dark-goldenrod);
+      width: 100%;
     }
 
     .form {
-      display: grid;
-      gap: .9rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+      padding: 2rem 2.5rem 2.5rem;
+      width: 100%;
     }
 
-    .form-group {
-      display: grid;
-      gap: .35rem;
+    .login-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      padding: 2rem 0 0;
     }
 
-    .form-group label {
-      font-size: .72rem;
-      letter-spacing: .08em;
+    .logo-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .logo-img {
+      width: 100%;
+      max-width: 210px;
+      display: block;
+      object-fit: contain;
+    }
+
+    .logo-fallback {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1;
+      margin-bottom: 2rem;
+    }
+
+    .logo-alpha {
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 300;
+      letter-spacing: 0.45em;
+      color: var(--pale-oak);
       text-transform: uppercase;
-      color: rgba(253, 240, 213, 0.55);
+      margin-bottom: 0.4rem;
     }
 
-    .form-group input {
-      background: rgba(4, 12, 16, .7);
-      border: 1px solid rgba(253, 240, 213, .14);
-      color: var(--cream);
-      padding: .72rem .9rem;
-      border-radius: 2px;
-      outline: none;
-      font-size: .9rem;
-      font-family: "Barlow", "Segoe UI", sans-serif;
+    .logo-barber {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8rem;
+      font-weight: 700;
+      color: var(--pale-oak);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
-    .form-group input:focus {
-      border-color: rgba(193, 18, 31, .52);
+    .logo-accent {
+      color: var(--dark-goldenrod);
     }
 
-    .btn {
-      margin-top: .2rem;
+    .title {
+      text-align: center;
+      font-family: 'Playfair Display', serif;
+      font-weight: 700;
+      font-size: 1.6rem;
+      color: var(--pale-oak);
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      margin-top: -16px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: rgba(207, 189, 166, 0.55);
+      line-height: 1.5;
+    }
+
+    .form_control {
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form_control .label {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transition: transform ease 0.2s;
+      transform: translate(0%, -50%);
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.75rem;
+      user-select: none;
+      pointer-events: none;
+      color: var(--pale-oak);
+      opacity: 0.6;
+    }
+
+    .form_control .input {
+      width: 100%;
+      background-color: transparent;
       border: none;
-      background: var(--brick);
-      color: var(--cream);
-      font-size: .82rem;
-      font-weight: 600;
-      letter-spacing: .08em;
+      outline: none;
+      color: var(--pale-oak);
+      padding: 0.65rem 0.5rem;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.85rem;
+      border-radius: 5px;
+      transition: box-shadow ease 0.2s;
+      box-shadow:
+        0px 0px 0px #0e0e0e,
+        0px 0px 0px rgba(95, 94, 94, 0.25),
+        inset 1.5px 1.5px 3px #0e0e0e,
+        inset -1.5px -1.5px 3px #3a3a37;
+    }
+
+    .form_control .input:focus,
+    .form_control .input:valid {
+      box-shadow:
+        0px 0px 0px #0e0e0e,
+        0px 0px 0px rgba(95, 94, 94, 0.25),
+        inset 3px 3px 4px #0e0e0e,
+        inset -3px -3px 4px #3a3a37;
+    }
+
+    .form_control .input:focus + .label,
+    .form_control .input:valid + .label {
+      transform: translate(-150%, -50%);
+    }
+
+    form button {
+      width: 100%;
+      background-color: var(--dark-goldenrod);
+      border: none;
+      outline: none;
+      color: var(--black);
+      padding: 0.7rem;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: .72rem 1rem;
-      border-radius: 2px;
+      border-radius: 5px;
       cursor: pointer;
-      transition: background .2s;
+      transition: all 0.2s ease;
+      box-shadow:
+        1.5px 1.5px 3px #0e0e0e,
+        -1.5px -1.5px 3px rgba(95, 94, 94, 0.25),
+        inset 0px 0px 0px #0e0e0e,
+        inset 0px 0px 0px #5f5e5e;
     }
 
-    .btn:hover {
-      background: var(--molten);
+    form button:hover {
+      background-color: #d4953a;
+      letter-spacing: 0.16em;
     }
 
-    .erro {
-      min-height: 1.1rem;
-      color: #ff8f8f;
-      font-size: .82rem;
-      margin-top: .2rem;
+    form button:active {
+      box-shadow:
+        0px 0px 0px #0e0e0e,
+        0px 0px 0px rgba(95, 94, 94, 0.25),
+        inset 3px 3px 4px #0e0e0e,
+        inset -3px -3px 4px #3a3a37;
+    }
+
+    .erro-msg {
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.78rem;
+      color: #e05555;
+      text-align: center;
+      display: none;
+      min-height: 1rem;
+    }
+
+    .erro-msg.visivel {
+      display: block;
+      animation: shake 0.4s ease;
+    }
+
+    .container.shake {
+      animation: shake 0.4s ease;
     }
 
     @keyframes shake {
@@ -130,60 +259,130 @@
       40%, 80% { transform: translateX(8px); }
     }
 
-    .shake {
-      animation: shake .4s ease;
+    @media (max-width: 420px) {
+      .login-wrap,
+      .container {
+        width: 100%;
+      }
+
+      .form {
+        padding: 1.6rem 1.25rem 2rem;
+      }
     }
   </style>
 </head>
 <body>
   <div class="login-wrap">
-    <h1 class="logo">Barber<span>.CO</span></h1>
-    <article class="card" id="login-card">
-      <h2 class="titulo">Login Administrativo</h2>
-      <p class="subtitulo">Acesso restrito ao administrador</p>
-
-      <form id="login-form" class="form">
-        <div class="form-group">
-          <label for="usuario">Usuário</label>
-          <input id="usuario" type="text" autocomplete="username" required>
+    <article class="container" id="login-card">
+      <div class="login-content">
+        <div class="logo-wrap">
+          <img
+            src="../img/logo-alpha-barber.png"
+            alt="Alpha Barber"
+            class="logo-img"
+            id="logo-alpha-barber"
+            onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='flex';"
+          >
+          <div class="logo-fallback" id="logo-fallback">
+            <span class="logo-alpha">ALPHA</span>
+            <span class="logo-barber"><span class="logo-accent">B</span>ARBER</span>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="senha">Senha</label>
-          <input id="senha" type="password" autocomplete="current-password" required>
-        </div>
+        <h2 class="title">Acesso Administrativo</h2>
+        <p class="subtitle">Entre com seu usuário e senha para acessar o painel.</p>
 
-        <button type="submit" class="btn">Entrar</button>
-        <p id="erro-login" class="erro"></p>
-      </form>
+        <form id="login-form" class="form" autocomplete="on">
+          <div class="form_control">
+            <input id="input-usuario" class="input" type="text" required autocomplete="username">
+            <label class="label" for="input-usuario">Usuário</label>
+          </div>
+
+          <div class="form_control">
+            <input id="input-senha" class="input" type="password" required autocomplete="current-password">
+            <label class="label" for="input-senha">Senha</label>
+          </div>
+
+          <button type="submit">Entrar</button>
+          <p id="erro-login" class="erro-msg" aria-live="polite"></p>
+        </form>
+      </div>
     </article>
   </div>
 
   <script src="../js/auth.js"></script>
   <script>
-    if (isAdminLogado()) {
-      window.location.href = "painel.html";
-    }
+    let erroTimeoutId = null;
 
-    const form = document.getElementById("login-form");
-    const erro = document.getElementById("erro-login");
-    const card = document.getElementById("login-card");
-
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      const usuario = document.getElementById("usuario").value.trim();
-      const senha = document.getElementById("senha").value;
-
-      if (fazerLogin(usuario, senha)) {
-        window.location.href = "painel.html";
+    document.addEventListener('DOMContentLoaded', () => {
+      if (typeof isAdminLogado === 'function' && isAdminLogado()) {
+        window.location.href = 'painel.html';
         return;
       }
 
-      erro.textContent = "Usuário ou senha incorretos";
-      card.classList.remove("shake");
-      void card.offsetWidth;
-      card.classList.add("shake");
+      const form = document.getElementById('login-form');
+      if (form) {
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          tentarLogin();
+        });
+      }
+    });
+
+    function tentarLogin() {
+      const usuario = document.getElementById('input-usuario').value.trim();
+      const senha = document.getElementById('input-senha').value.trim();
+      const erroEl = document.getElementById('erro-login');
+      const card = document.querySelector('.container');
+
+      if (!usuario || !senha) {
+        mostrarErroLogin('Preencha usuário e senha.', card, erroEl);
+        return;
+      }
+
+      if (typeof fazerLogin === 'function' && fazerLogin(usuario, senha)) {
+        const btn = document.querySelector('form button');
+        if (btn) {
+          btn.textContent = 'Entrando...';
+          btn.disabled = true;
+        }
+
+        setTimeout(() => {
+          window.location.href = 'painel.html';
+        }, 600);
+        return;
+      }
+
+      mostrarErroLogin('Usuário ou senha incorretos.', card, erroEl);
+    }
+
+    function mostrarErroLogin(msg, card, erroEl) {
+      if (erroTimeoutId) {
+        clearTimeout(erroTimeoutId);
+      }
+
+      if (erroEl) {
+        erroEl.textContent = msg;
+        erroEl.classList.add('visivel');
+      }
+
+      if (card) {
+        card.classList.remove('shake');
+        void card.offsetWidth;
+        card.classList.add('shake');
+      }
+
+      erroTimeoutId = setTimeout(() => {
+        if (erroEl) erroEl.classList.remove('visivel');
+        if (card) card.classList.remove('shake');
+      }, 3000);
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' && event.target && event.target.closest && event.target.closest('#login-form')) {
+        event.preventDefault();
+        tentarLogin();
+      }
     });
   </script>
 </body>

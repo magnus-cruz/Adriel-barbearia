@@ -16,4 +16,13 @@
   "url" : "http://localhost:8080/api/uploads/upload-f377e042-6973-456e-9ddc-98ee998bdc86.jpg",
   "tamanhoKb" : 391,
   "dataUpload" : "2026-04-19"
+}, {
+  "id" : "9d740650-0407-4b6e-be52-ffff30786cd6",
+  "nomeArquivo" : "upload-f6cac50b-79ba-4eed-bd91-617dfe5f2066.jpg",
+  "tipo" : "image/jpeg",
+  "categoria" : "degrade",
+  "titulo" : "corte",
+  "url" : "http://localhost:8080/api/uploads/upload-f6cac50b-79ba-4eed-bd91-617dfe5f2066.jpg",
+  "tamanhoKb" : 2348,
+  "dataUpload" : "2026-04-22"
 } ]

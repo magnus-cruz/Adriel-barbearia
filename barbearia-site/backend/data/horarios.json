@@ -3,8 +3,8 @@
     "intervaloPadrao" : 30,
     "diasSemana" : {
       "segunda" : {
-        "inicio" : "09:00",
-        "fim" : "17:00",
+        "inicio" : "10:30",
+        "fim" : "16:00",
         "ativo" : true
       },
       "terca" : {
