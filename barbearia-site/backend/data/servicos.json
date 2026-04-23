@@ -28,4 +28,10 @@
   "preco" : 25.0,
   "duracaoMinutos" : 15,
   "ativo" : true
+}, {
+  "id" : 6,
+  "nome" : "Misto",
+  "preco" : 65.0,
+  "duracaoMinutos" : 50,
+  "ativo" : true
 } ]

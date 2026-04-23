@@ -3,153 +3,352 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin | Painel</title>
+  <title>Alpha Barber — Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
-  <script src="../js/auth.js"></script>
-  <script>exigirAdmin();</script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="../css/galeria.css">
   <link rel="stylesheet" href="../css/admin.css">
+  <script src="../js/auth.js"></script>
+  <script>exigirAdmin();</script>
 </head>
 <body>
-  <header class="admin-header topbar">
-    <div class="container admin-container">
-      <div class="logo-alpha-barber">
-        <img src="/img/logo-alpha-barber.png" alt="Alpha Barber" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-        <div class="logo-texto" style="display:none">
-          <span class="logo-alpha">ALPHA</span>
-          <span class="logo-barber"><span class="logo-accent">B</span>ARBER</span>
-        </div>
+
+  <!-- ── HEADER ── -->
+  <header class="admin-header">
+    <div class="admin-logo">
+      <img src="/img/logo-alpha-barber.png" alt="Alpha Barber" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="logo-texto" style="display:none">
+        <span class="logo-alpha">ALPHA</span>
+        <span class="logo-barber"><span class="logo-accent">B</span>ARBER</span>
       </div>
-      <button class="btn-sair" onclick="fazerLogout()" type="button">Sair</button>
+    <div class="header-right">
+      <span class="admin-usuario">● Admin logado</span>
+      <button onclick="fazerLogout()" class="btn-sair">Sair</button>
     </div>
   </header>
 
-  <main class="section">
-    <div class="container admin-container">
-      <h1>Painel de Administracao</h1>
+  <!-- ── LAYOUT PRINCIPAL ── -->
+  <div class="admin-layout">
 
-      <div class="tabs admin-tabs" aria-label="Abas do painel administrativo">
-        <button class="tab-btn admin-tab active" data-tab="tab-servicos">Servicos e Precos</button>
-        <button class="tab-btn admin-tab" data-tab="tab-horarios">Horarios Disponiveis</button>
-        <button class="tab-btn admin-tab" data-tab="tab-imprevistos">Imprevistos/Bloqueios</button>
-        <button class="tab-btn admin-tab" data-tab="tab-galeria">Galeria</button>
-        <button class="tab-btn admin-tab" data-tab="tab-cursos">Cursos</button>
-        <button class="tab-btn admin-tab" data-tab="tab-agendamentos">Agendamentos</button>
+    <!-- ── SIDEBAR ── -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+
+      <div class="sidebar-titulo">Painel</div>
+
+      <nav class="sidebar-nav">
+
+        <button class="sidebar-item active"
+          onclick="switchTab(this, 'servicos')"
+          data-tab="servicos">
+          <span class="sidebar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="6" cy="6" r="3"/>
+              <circle cx="6" cy="18" r="3"/>
+              <line x1="20" y1="4" x2="8.12" y2="15.88"/>
+              <line x1="14.47" y1="14.48" x2="20" y2="20"/>
+              <line x1="8.12" y1="8.12" x2="12" y2="12"/>
+            </svg>
+          </span>
+          <span class="sidebar-label">Serviços</span>
+          <span class="sidebar-badge" id="badge-servicos"></span>
+        </button>
+
+        <button class="sidebar-item"
+          onclick="switchTab(this, 'barbeiros')"
+          data-tab="barbeiros">
+          <span class="sidebar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </span>
+          <span class="sidebar-label">Barbeiros</span>
+          <span class="sidebar-badge" id="badge-barbeiros"></span>
+        </button>
+
+        <button class="sidebar-item"
+          onclick="switchTab(this, 'horarios')"
+          data-tab="horarios">
+          <span class="sidebar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </span>
+          <span class="sidebar-label">Horários</span>
+        </button>
+
+        <button class="sidebar-item"
+          onclick="switchTab(this, 'imprevistos')"
+          data-tab="imprevistos">
+          <span class="sidebar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </span>
+          <span class="sidebar-label">Imprevistos</span>
+          <span class="sidebar-badge sidebar-badge-alert" id="badge-imprevistos"></span>
+        </button>
+
+        <button class="sidebar-item"
+          onclick="switchTab(this, 'galeria')"
+          data-tab="galeria">
+          <span class="sidebar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
+          </span>
+          <span class="sidebar-label">Galeria</span>
+          <span class="sidebar-badge" id="badge-galeria"></span>
+        </button>
+
+        <button class="sidebar-item"
+          onclick="switchTab(this, 'cursos')"
+          data-tab="cursos">
+          <span class="sidebar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+            </svg>
+          </span>
+          <span class="sidebar-label">Cursos</span>
+          <span class="sidebar-badge" id="badge-cursos"></span>
+        </button>
+
+        <button class="sidebar-item"
+          onclick="switchTab(this, 'agendamentos')"
+          data-tab="agendamentos">
+          <span class="sidebar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8"  y1="2" x2="8"  y2="6"/>
+              <line x1="3"  y1="10" x2="21" y2="10"/>
+            </svg>
+          </span>
+          <span class="sidebar-label">Agendamentos</span>
+          <span class="sidebar-badge sidebar-badge-alert" id="badge-agendamentos"></span>
+        </button>
+
+      </nav>
+
+      <div class="sidebar-footer">
+        <a href="../index.html" class="sidebar-link-site" target="_blank">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Ver site
+        </a>
       </div>
 
-      <section id="tab-servicos" class="tab-pane active card">
-        <h2>Servicos e Precos</h2>
-        <form id="form-servico" class="admin-form">
-          <input id="servico-id" type="hidden">
-          <div class="form-group"><label>Nome do Servico</label><input id="nome-servico" required></div>
-          <div class="form-group"><label>Preco (R$)</label><input id="preco-servico" type="number" step="0.01" required></div>
-          <div class="form-group"><label>Duracao (min)</label><input id="duracao-servico" type="number" required></div>
-          <div class="form-group"><label><input id="ativo-servico" type="checkbox" checked> Ativo</label></div>
-          <button class="btn-add full" type="submit">Salvar servico</button>
-        </form>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Servico</th><th>Preco</th><th>Duracao</th><th>Acoes</th></tr></thead><tbody id="tbody-servicos"></tbody></table></div>
-      </section>
+    </aside>
 
-      <section id="tab-horarios" class="tab-pane card">
-        <h2>Horarios Disponiveis</h2>
-        <form id="form-horarios" class="admin-form">
-          <div class="form-group"><label>Intervalo padrao (min)</label><input id="intervalo-padrao" type="number" min="5" step="5" required></div>
-          <div class="form-group"><label>Dia da semana</label>
-            <select id="dia-semana" required>
-              <option value="segunda">Segunda</option><option value="terca">Terca</option><option value="quarta">Quarta</option>
-              <option value="quinta">Quinta</option><option value="sexta">Sexta</option><option value="sabado">Sabado</option><option value="domingo">Domingo</option>
-            </select>
-          </div>
-          <div class="form-group"><label>Inicio</label><input id="inicio-horario" type="time"></div>
-          <div class="form-group"><label>Fim</label><input id="fim-horario" type="time"></div>
-          <div class="form-group full"><label><input id="dia-ativo" type="checkbox" checked> Dia ativo</label></div>
-          <button class="btn-add" type="submit">Salvar horario</button>
-          <button class="btn-acao btn-editar" type="button" id="horarios-reset">Limpar formulario</button>
-        </form>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Dia</th><th>Status</th><th>Inicio</th><th>Fim</th><th>Acoes</th></tr></thead><tbody id="tbody-horarios"></tbody></table></div>
-      </section>
+    <!-- ── CONTEÚDO PRINCIPAL ── -->
+    <main class="admin-main">
 
-      <section id="tab-imprevistos" class="tab-pane card">
-        <h2>Imprevistos / Bloqueios</h2>
-        <form id="form-imprevisto" class="admin-form">
-          <div class="form-group"><label>Data</label><input id="data-imprevisto" type="date" required></div>
-          <div class="form-group"><label>Periodo</label><select id="periodo-imprevisto"><option value="manha">Manha</option><option value="tarde">Tarde</option><option value="dia_todo">Dia todo</option></select></div>
-          <div class="form-group full"><label>Motivo</label><input id="motivo-imprevisto" required></div>
-          <button class="btn-add full" type="submit">Adicionar bloqueio</button>
-        </form>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Data</th><th>Periodo</th><th>Motivo</th><th>Acoes</th></tr></thead><tbody id="tbody-imprevistos"></tbody></table></div>
-      </section>
+      <div class="admin-breadcrumb">
+        <span>Admin</span>
+        <span class="breadcrumb-sep">›</span>
+        <span id="breadcrumb-atual">Serviços e Preços</span>
+      </div>
 
-      <section id="tab-galeria" class="tab-pane card">
-        <h2>Galeria</h2>
-        <form id="form-foto" class="admin-form">
-          <label for="file-upload" class="custum-file-upload full" id="drop-zone">
-            <div class="icon">
-              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM14 15.5C14 14.1193 15.1193 13 16.5 13C17.8807 13 19 14.1193 19 15.5V16V17H20C21.1046 17 22 17.8954 22 19C22 20.1046 21.1046 21 20 21H13C11.8954 21 11 20.1046 11 19C11 17.8954 11.8954 17 13 17H14V16V15.5ZM16.5 11C14.142 11 12.2076 12.8136 12.0156 15.122C10.2825 15.5606 9 17.1305 9 19C9 21.2091 10.7909 23 13 23H20C22.2091 23 24 21.2091 24 19C24 17.1305 22.7175 15.5606 20.9844 15.122C20.7924 12.8136 18.858 11 16.5 11Z" fill="currentColor"/>
-              </svg>
-            </div>
+      <div class="admin-section-header">
+        <h1 class="admin-section-title" id="secao-titulo">Serviços e Preços</h1>
+        <p class="admin-section-desc" id="secao-desc">Gerencie os serviços oferecidos, preços e duração.</p>
+      </div>
 
-            <div class="text"><span>Clique ou arraste a imagem aqui</span></div>
-            <div class="text subtext"><span>JPG, PNG, WEBP ou MP4 â€” MÃ¡x. 10MB</span></div>
-            <input id="file-upload" type="file" accept="image/jpeg,image/png,image/webp,video/mp4">
-          </label>
-
-          <div id="preview-wrap" class="full" style="display:none;margin-top:1rem">
-            <p style="font-family:'Barlow',sans-serif;font-size:0.7rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(207,189,166,0.4);margin-bottom:0.5rem">Verifique antes de enviar</p>
-            <img id="preview-img" alt="preview" style="width:100%;max-height:260px;object-fit:contain;background:var(--black);border:1px solid var(--taupe);border-radius:4px;padding:8px">
-            <p id="preview-nome" style="font-family:'Barlow',sans-serif;font-size:0.75rem;color:rgba(207,189,166,0.4);margin-top:0.4rem"></p>
-          </div>
-
-          <div class="form-group"><label>TÃ­tulo da imagem *</label><input type="text" id="titulo-midia" placeholder="Ex: Corte degradÃª moderno" maxlength="60" required></div>
-          <div class="form-group"><label>Categoria *</label><select id="categoria-midia"><option value="galeria">Galeria</option><option value="cortes">Cortes</option><option value="barba">Barba</option><option value="degrade">DegradÃª</option><option value="eventos">Eventos</option></select></div>
-          <div id="progress-wrap" class="full" style="display:none;margin-top:1rem">
-            <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
-              <span style="font-family:'Barlow',sans-serif;font-size:0.72rem;color:rgba(207,189,166,0.5)">Enviando...</span>
-              <span id="progress-pct" style="font-family:'Barlow',sans-serif;font-size:0.72rem;font-weight:600;color:var(--dark-goldenrod)">0%</span>
-            </div>
-            <div style="width:100%;height:3px;background:var(--taupe);border-radius:2px;overflow:hidden">
-              <div id="progress-fill" style="height:100%;width:0%;background:var(--dark-goldenrod);border-radius:2px;transition:width 0.2s ease"></div>
-            </div>
-          </div>
-          <button id="btn-enviar" disabled style="margin-top:1rem;width:100%;background:var(--dark-goldenrod);color:var(--black);border:none;padding:0.7rem;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;border-radius:4px;cursor:not-allowed;opacity:0.4;transition:all 0.2s" type="submit">Enviar imagem</button>
-        </form>
-
-        <div id="galeria-contador" class="small"></div>
-        <div id="filtros" class="tabs"></div>
-        <div id="galeria-grid" class="gallery-grid"></div>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Tipo</th><th>Categoria</th><th>Titulo</th><th>Preview</th><th>Arquivo</th><th>Acoes</th></tr></thead><tbody id="midias-lista"></tbody></table></div>
-      </section>
-
-      <section id="tab-cursos" class="tab-pane card">
-        <h2>Cursos</h2>
-        <form id="form-curso" class="admin-form">
-          <input id="curso-id" type="hidden">
-          <div class="form-group"><label>Titulo</label><input id="titulo-curso" required></div>
-          <div class="form-group"><label>Preco</label><input id="preco-curso" type="number" step="0.01" required></div>
-          <div class="form-group"><label>Carga Horaria</label><input id="carga-curso" required></div>
-          <div class="form-group full"><label>Descricao</label><textarea id="desc-curso" required></textarea></div>
-          <div class="form-group"><label>URL da Imagem</label><input id="imagem-curso" required></div>
-          <div class="form-group"><label>Link de Compra</label><input id="link-curso" required></div>
-          <button class="btn-add full" type="submit">Salvar curso</button>
-        </form>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Titulo</th><th>Preco</th><th>Carga</th><th>Acoes</th></tr></thead><tbody id="tbody-cursos"></tbody></table></div>
-      </section>
-
-      <section id="tab-agendamentos" class="tab-pane card">
-        <h2>Agendamentos</h2>
-        <div class="admin-form" style="margin-bottom:1rem;">
-          <div class="form-group"><label>Filtrar por data minima</label><input id="filtro-data" type="date"></div>
-          <div class="form-group"><label>Status</label><select id="filtro-status" onchange="filtrarAgendamentos()"><option value="todos">Todos</option><option value="confirmado">Confirmados</option><option value="pendente">Pendentes</option><option value="cancelado">Cancelados</option></select></div>
-          <button id="btn-filtrar-data" class="btn-add full" type="button">Aplicar filtro</button>
+      <!-- ── TAB: SERVIÇOS ── -->
+      <div id="tab-servicos" class="tab-content ativo">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Serviços e Preços</div>
+          <div class="section-card-body">
+            <form id="form-servico" class="admin-form">
+              <input id="servico-id" type="hidden">
+              <div class="form-group"><label>Nome do Serviço</label><input id="nome-servico" required></div>
+              <div class="form-group"><label>Preço (R$)</label><input id="preco-servico" type="number" step="0.01" required></div>
+              <div class="form-group"><label>Duração (min)</label><input id="duracao-servico" type="number" required></div>
+              <div class="form-group"><label><input id="ativo-servico" type="checkbox" checked> Ativo</label></div>
+              <button class="btn-add full" type="submit">Salvar serviço</button>
+            </form>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Serviço</th><th>Preço</th><th>Duração</th><th>Ações</th></tr></thead><tbody id="tbody-servicos"></tbody></table></div>
         </div>
-        <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Cliente</th><th>Servico</th><th>Data</th><th>Horario</th><th>Status</th><th>Acoes</th></tr></thead><tbody id="tbody-agendamentos"></tbody></table></div>
-      </section>
-    </div>
-  </main>
+
+      <!-- ── TAB: BARBEIROS ── -->
+      <div id="tab-barbeiros" class="tab-content">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Barbeiros</div>
+          <div class="section-card-body">
+            <div class="admin-form" style="max-width:600px">
+              <div class="form-group">
+                <label>Nome *</label>
+                <input id="nome-barbeiro" type="text" class="form-input" placeholder="Ex: Adriel Silva">
+              </div>
+              <div class="form-group">
+                <label>Especialidade</label>
+                <input id="espec-barbeiro" type="text" class="form-input" placeholder="Ex: Degradê e Barba">
+              </div>
+              <div class="form-group">
+                <label>Instagram</label>
+                <input id="insta-barbeiro" type="text" class="form-input" placeholder="@usuario">
+              </div>
+              <div class="form-group full">
+                <label>Foto do barbeiro</label>
+                <label for="foto-barbeiro" class="custum-file-upload" style="height:120px">
+                  <div class="icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                    </svg>
+                  </div>
+                  <div class="text">
+                    <span id="label-foto-barbeiro">Clique para selecionar foto</span>
+                  </div>
+                  <input id="foto-barbeiro" type="file" accept="image/jpeg,image/png,image/webp">
+                </label>
+              </div>
+              <div class="form-group full" style="margin-top:.5rem">
+                <button class="btn-primary" onclick="salvarBarbeiro()" id="btn-salvar-barbeiro" type="button">Adicionar Barbeiro</button>
+              </div>
+            <div id="preview-barbeiro" style="display:none; margin-top:1rem">
+              <img id="preview-barbeiro-img" alt="preview" style="width:100px;height:100px;object-fit:cover;border-radius:50%;border:2px solid var(--dark-goldenrod)">
+            </div>
+            <div class="admin-table-wrap" style="margin-top:2rem">
+              <table class="admin-table">
+                <thead>
+                  <tr><th>Foto</th><th>Nome</th><th>Especialidade</th><th>Instagram</th><th>Status</th><th>Ações</th></tr>
+                </thead>
+                <tbody id="tbody-barbeiros">
+                  <tr><td colspan="6" style="text-align:center;color:var(--pale-oak-dim);padding:2rem">Carregando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+        </div>
+
+      <!-- ── TAB: HORÁRIOS ── -->
+      <div id="tab-horarios" class="tab-content">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Horários Disponíveis</div>
+          <div class="section-card-body">
+            <form id="form-horarios" class="admin-form">
+              <div class="form-group"><label>Intervalo padrão (min)</label><input id="intervalo-padrao" type="number" min="5" step="5" required></div>
+              <div class="form-group"><label>Dia da semana</label>
+                <select id="dia-semana" required>
+                  <option value="segunda">Segunda</option><option value="terca">Terça</option><option value="quarta">Quarta</option>
+                  <option value="quinta">Quinta</option><option value="sexta">Sexta</option><option value="sabado">Sábado</option><option value="domingo">Domingo</option>
+                </select>
+              </div>
+              <div class="form-group"><label>Início</label><input id="inicio-horario" type="time"></div>
+              <div class="form-group"><label>Fim</label><input id="fim-horario" type="time"></div>
+              <div class="form-group full"><label><input id="dia-ativo" type="checkbox" checked> Dia ativo</label></div>
+              <button class="btn-add" type="submit">Salvar horário</button>
+              <button class="btn-acao btn-editar" type="button" id="horarios-reset">Limpar formulário</button>
+            </form>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Dia</th><th>Status</th><th>Início</th><th>Fim</th><th>Ações</th></tr></thead><tbody id="tbody-horarios"></tbody></table></div>
+        </div>
+
+      <!-- ── TAB: IMPREVISTOS ── -->
+      <div id="tab-imprevistos" class="tab-content">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Imprevistos / Bloqueios</div>
+          <div class="section-card-body">
+            <form id="form-imprevisto" class="admin-form">
+              <div class="form-group"><label>Data</label><input id="data-imprevisto" type="date" required></div>
+              <div class="form-group"><label>Período</label><select id="periodo-imprevisto"><option value="manha">Manhã</option><option value="tarde">Tarde</option><option value="dia_todo">Dia todo</option></select></div>
+              <div class="form-group full"><label>Motivo</label><input id="motivo-imprevisto" required></div>
+              <button class="btn-add full" type="submit">Adicionar bloqueio</button>
+            </form>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Data</th><th>Período</th><th>Motivo</th><th>Ações</th></tr></thead><tbody id="tbody-imprevistos"></tbody></table></div>
+        </div>
+
+      <!-- ── TAB: GALERIA ── -->
+      <div id="tab-galeria" class="tab-content">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Galeria</div>
+          <div class="section-card-body">
+            <form id="form-foto" class="admin-form">
+              <label for="file-upload" class="custum-file-upload full" id="drop-zone">
+                <div class="icon">
+                  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M10 1C9.73478 1 9.48043 1.10536 9.29289 1.29289L3.29289 7.29289C3.10536 7.48043 3 7.73478 3 8V20C3 21.6569 4.34315 23 6 23H7C7.55228 23 8 22.5523 8 22C8 21.4477 7.55228 21 7 21H6C5.44772 21 5 20.5523 5 20V9H10C10.5523 9 11 8.55228 11 8V3H18C18.5523 3 19 3.44772 19 4V9C19 9.55228 19.4477 10 20 10C20.5523 10 21 9.55228 21 9V4C21 2.34315 19.6569 1 18 1H10ZM9 7H6.41421L9 4.41421V7ZM14 15.5C14 14.1193 15.1193 13 16.5 13C17.8807 13 19 14.1193 19 15.5V16V17H20C21.1046 17 22 17.8954 22 19C22 20.1046 21.1046 21 20 21H13C11.8954 21 11 20.1046 11 19C11 17.8954 11.8954 17 13 17H14V16V15.5ZM16.5 11C14.142 11 12.2076 12.8136 12.0156 15.122C10.2825 15.5606 9 17.1305 9 19C9 21.2091 10.7909 23 13 23H20C22.2091 23 24 21.2091 24 19C24 17.1305 22.7175 15.5606 20.9844 15.122C20.7924 12.8136 18.858 11 16.5 11Z" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="text"><span>Clique ou arraste a imagem aqui</span></div>
+                <div class="text subtext"><span>JPG, PNG, WEBP ou MP4 — Máx. 10MB</span></div>
+                <input id="file-upload" type="file" accept="image/jpeg,image/png,image/webp,video/mp4">
+              </label>
+
+              <div id="preview-wrap" class="full" style="display:none;margin-top:1rem">
+                <p style="font-family:'Barlow',sans-serif;font-size:0.7rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(207,189,166,0.4);margin-bottom:0.5rem">Verifique antes de enviar</p>
+                <img id="preview-img" alt="preview" style="width:100%;max-height:260px;object-fit:contain;background:var(--black);border:1px solid var(--taupe);border-radius:4px;padding:8px">
+                <p id="preview-nome" style="font-family:'Barlow',sans-serif;font-size:0.75rem;color:rgba(207,189,166,0.4);margin-top:0.4rem"></p>
+              </div>
+
+              <div class="form-group"><label>Título da imagem *</label><input type="text" id="titulo-midia" placeholder="Ex: Corte degradê moderno" maxlength="60" required></div>
+              <div class="form-group"><label>Categoria *</label><select id="categoria-midia"><option value="galeria">Galeria</option><option value="cortes">Cortes</option><option value="barba">Barba</option><option value="degrade">Degradê</option><option value="eventos">Eventos</option></select></div>
+              <div id="progress-wrap" class="full" style="display:none;margin-top:1rem">
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.4rem">
+                  <span style="font-family:'Barlow',sans-serif;font-size:0.72rem;color:rgba(207,189,166,0.5)">Enviando...</span>
+                  <span id="progress-pct" style="font-family:'Barlow',sans-serif;font-size:0.72rem;font-weight:600;color:var(--dark-goldenrod)">0%</span>
+                </div>
+                <div style="width:100%;height:3px;background:var(--taupe);border-radius:2px;overflow:hidden">
+                  <div id="progress-fill" style="height:100%;width:0%;background:var(--dark-goldenrod);border-radius:2px;transition:width 0.2s ease"></div>
+              </div>
+              <button id="btn-enviar" disabled style="margin-top:1rem;width:100%;background:var(--dark-goldenrod);color:var(--black);border:none;padding:0.7rem;font-family:'Barlow',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;border-radius:4px;cursor:not-allowed;opacity:0.4;transition:all 0.2s" type="submit">Enviar imagem</button>
+            </form>
+
+            <div id="galeria-contador" class="small"></div>
+            <div id="filtros" class="tabs"></div>
+            <div id="galeria-grid" class="gallery-grid"></div>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Tipo</th><th>Categoria</th><th>Título</th><th>Preview</th><th>Arquivo</th><th>Ações</th></tr></thead><tbody id="midias-lista"></tbody></table></div>
+        </div>
+
+      <!-- ── TAB: CURSOS ── -->
+      <div id="tab-cursos" class="tab-content">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Cursos</div>
+          <div class="section-card-body">
+            <form id="form-curso" class="admin-form">
+              <input id="curso-id" type="hidden">
+              <div class="form-group"><label>Título</label><input id="titulo-curso" required></div>
+              <div class="form-group"><label>Preço</label><input id="preco-curso" type="number" step="0.01" required></div>
+              <div class="form-group"><label>Carga Horária</label><input id="carga-curso" required></div>
+              <div class="form-group full"><label>Descrição</label><textarea id="desc-curso" required></textarea></div>
+              <div class="form-group"><label>URL da Imagem</label><input id="imagem-curso" required></div>
+              <div class="form-group"><label>Link de Compra</label><input id="link-curso" required></div>
+              <button class="btn-add full" type="submit">Salvar curso</button>
+            </form>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Título</th><th>Preço</th><th>Carga</th><th>Ações</th></tr></thead><tbody id="tbody-cursos"></tbody></table></div>
+        </div>
+
+      <!-- ── TAB: AGENDAMENTOS ── -->
+      <div id="tab-agendamentos" class="tab-content">
+        <div class="section-card">
+          <div class="section-card-header">
+            <div class="section-card-title">Agendamentos</div>
+          <div class="section-card-body">
+            <div class="admin-form" style="margin-bottom:1rem;">
+              <div class="form-group"><label>Filtrar por data mínima</label><input id="filtro-data" type="date"></div>
+              <div class="form-group"><label>Status</label><select id="filtro-status" onchange="filtrarAgendamentos()"><option value="todos">Todos</option><option value="confirmado">Confirmados</option><option value="pendente">Pendentes</option><option value="cancelado">Cancelados</option></select></div>
+              <button id="btn-filtrar-data" class="btn-add full" type="button">Aplicar filtro</button>
+            </div>
+            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Cliente</th><th>Serviço</th><th>Barbeiro</th><th>Data</th><th>Horário</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tbody-agendamentos"></tbody></table></div>
+        </div>
+
+    </main>
+  </div>
 
   <div id="lightbox" class="lightbox" aria-hidden="true">
     <button type="button" class="lightbox-close" data-lightbox-close aria-label="Fechar imagem">&times;</button>
@@ -158,7 +357,7 @@
       <img alt="Imagem ampliada">
       <figcaption class="lightbox-caption"></figcaption>
     </figure>
-    <button type="button" class="lightbox-nav lightbox-nav--next" data-lightbox-next aria-label="PrÃ³xima imagem">&#8250;</button>
+    <button type="button" class="lightbox-nav lightbox-nav--next" data-lightbox-next aria-label="Próxima imagem">&#8250;</button>
   </div>
 
   <script src="../js/auth.js"></script>
@@ -167,4 +366,3 @@
   <script src="../js/admin.js"></script>
 </body>
 </html>
-

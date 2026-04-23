@@ -38,4 +38,12 @@
   "data" : "2026-04-22",
   "horario" : "12:00",
   "status" : "cancelado"
+}, {
+  "id" : 6,
+  "nome" : "Emanuel",
+  "telefone" : "61 98308-8897",
+  "servico" : "Corte Masculino",
+  "data" : "2026-04-23",
+  "horario" : "14:30",
+  "status" : "confirmado"
 } ]

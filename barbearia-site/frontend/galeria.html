@@ -10,28 +10,35 @@
 <body class="pagina-publica">
   <header class="topbar">
     <div class="container">
-      <div class="logo-alpha-barber">
-  <img src="/img/logo-alpha-barber.png"
-       alt="Alpha Barber"
-       onerror="this.style.display='none';
-         this.nextElementSibling.style.display='flex'">
-  <div class="logo-texto" style="display:none">
-    <span class="logo-alpha">ALPHA</span>
-    <span class="logo-barber">
-      <span class="logo-accent">B</span>ARBER
-    </span>
-  </div>
-</div>
-      <nav class="nav-links">
-        <a href="index.html">Home</a>
-        <a href="agendar.html">Agendar</a>
-        <a class="active" href="galeria.html">Galeria</a>
-        <a href="cursos.html">Cursos</a>
-        <a href="localizacao.html">Localizacao</a>
-        <a class="btn-admin-nav" href="admin/login.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
+      <nav>
+        <div class="logo-alpha-barber">
+          <img src="/img/logo-alpha-barber.png"
+               alt="Alpha Barber"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div class="logo-texto" style="display:none">
+            <span class="logo-alpha">ALPHA</span>
+            <span class="logo-barber"><span class="logo-accent">B</span>ARBER</span>
+          </div>
+        </div>
+
+        <ul class="nav-links" id="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a href="agendar.html">Agendar</a></li>
+          <li><a class="active" href="galeria.html">Galeria</a></li>
+          <li><a href="cursos.html">Cursos</a></li>
+          <li><a href="localizacao.html">Localizacao</a></li>
+          <li><a class="btn-admin-nav" href="admin/login.html">Admin</a></li>
+        </ul>
+
+        <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" onclick="toggleMenu()">
+          <span class="ham-line"></span>
+          <span class="ham-line"></span>
+          <span class="ham-line"></span>
+        </button>
       </nav>
     </div>
   </header>
+  <div class="nav-overlay" id="nav-overlay" onclick="fecharMenu()"></div>
 
   <main class="section">
     <div class="container">
@@ -54,6 +61,7 @@
 
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
   <script src="js/whatsapp.js"></script>
   <script src="js/galeria.js"></script>
 </body>

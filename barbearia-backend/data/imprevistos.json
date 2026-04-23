@@ -1,0 +1,11 @@
+[ {
+  "id" : 2,
+  "data" : "2026-02-21",
+  "periodo" : "dia_todo",
+  "motivo" : "Medico "
+}, {
+  "id" : 3,
+  "data" : "2026-04-22",
+  "periodo" : "manha",
+  "motivo" : "Medico"
+} ]

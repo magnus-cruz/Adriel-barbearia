@@ -9,28 +9,35 @@
 <body>
   <header class="topbar">
     <div class="container">
-      <div class="logo-alpha-barber">
-  <img src="/img/logo-alpha-barber.png"
-       alt="Alpha Barber"
-       onerror="this.style.display='none';
-         this.nextElementSibling.style.display='flex'">
-  <div class="logo-texto" style="display:none">
-    <span class="logo-alpha">ALPHA</span>
-    <span class="logo-barber">
-      <span class="logo-accent">B</span>ARBER
-    </span>
-  </div>
-</div>
-      <nav class="nav-links">
-        <a href="index.html">Home</a>
-        <a class="active" href="agendar.html">Agendar</a>
-        <a href="galeria.html">Galeria</a>
-        <a href="cursos.html">Cursos</a>
-        <a href="localizacao.html">Localizacao</a>
-        <a class="btn-admin-nav" href="admin/login.html"><i class="fa-solid fa-user-shield"></i> Admin</a>
+      <nav>
+        <div class="logo-alpha-barber">
+          <img src="/img/logo-alpha-barber.png"
+               alt="Alpha Barber"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+          <div class="logo-texto" style="display:none">
+            <span class="logo-alpha">ALPHA</span>
+            <span class="logo-barber"><span class="logo-accent">B</span>ARBER</span>
+          </div>
+        </div>
+
+        <ul class="nav-links" id="nav-links">
+          <li><a href="index.html">Home</a></li>
+          <li><a class="active" href="agendar.html">Agendar</a></li>
+          <li><a href="galeria.html">Galeria</a></li>
+          <li><a href="cursos.html">Cursos</a></li>
+          <li><a href="localizacao.html">Localizacao</a></li>
+          <li><a class="btn-admin-nav" href="admin/login.html">Admin</a></li>
+        </ul>
+
+        <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" onclick="toggleMenu()">
+          <span class="ham-line"></span>
+          <span class="ham-line"></span>
+          <span class="ham-line"></span>
+        </button>
       </nav>
     </div>
   </header>
+  <div class="nav-overlay" id="nav-overlay" onclick="fecharMenu()"></div>
 
   <main class="section">
     <div class="container">
@@ -45,6 +52,11 @@
         <label>Servico desejado
           <select id="select-servico" required></select>
         </label>
+        <label>Barbeiro
+          <select id="select-barbeiro">
+            <option value="Qualquer barbeiro">Qualquer barbeiro disponivel</option>
+          </select>
+        </label>
         <p id="info-servico" class="small"></p>
         <label>Data
           <input id="input-data" type="date" required>
@@ -55,10 +67,17 @@
         <button class="btn" type="submit"><i class="fa-solid fa-scissors"></i> Confirmar Agendamento</button>
         <button class="btn secondary" id="btn-whatsapp" type="button"><i class="fa-brands fa-whatsapp"></i> Agendar pelo WhatsApp</button>
       </form>
+
+      <div id="confirmacao-wrap" class="card" style="display:none;margin-top:1rem;padding:1rem;">
+        <h3 style="margin-bottom:0.6rem;">Agendamento confirmado</h3>
+        <p class="small" style="margin-bottom:0.8rem;">Se desejar, finalize enviando a confirmacao no WhatsApp.</p>
+        <a id="btn-wpp-confirm" class="btn" target="_blank" href="#">Confirmar no WhatsApp</a>
+      </div>
     </div>
   </main>
 
   <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
   <script src="js/whatsapp.js"></script>
   <script src="js/agendar.js"></script>
 </body>

@@ -5,7 +5,6 @@
 }
 
 async function validarSessaoAdmin() {
-  // Mantem verificacao simples local para o modo 100% sem dependencias externas.
   if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
     alert("Sua sessao expirou. Faca login novamente.");
     window.location.href = "login.html";
@@ -18,15 +17,116 @@ let selectedUploadFile = null;
 let agendamentosCache = [];
 window.arquivoSelecionado = null;
 
-const abaFuncoes = {
-  "tab-servicos": () => carregarServicos(),
-  "tab-horarios": () => carregarHorarios(),
-  "tab-imprevistos": () => carregarImprevistos(),
-  "tab-galeria": () => carregarMidiasAdmin(),
-  "tab-cursos": () => carregarCursos(),
-  "tab-agendamentos": () => carregarAgendamentos()
+/* ============================================================
+   METADADOS E CONTROLE DE ABAS (sidebar)
+   ============================================================ */
+const abas = {
+  servicos: {
+    titulo: "Servicos e Precos",
+    desc:   "Gerencie os servicos, precos e duracao.",
+    fn:     () => carregarServicos()
+  },
+  barbeiros: {
+    titulo: "Barbeiros",
+    desc:   "Adicione e remova barbeiros da equipe.",
+    fn:     () => carregarBarbeiros()
+  },
+  horarios: {
+    titulo: "Horarios Disponiveis",
+    desc:   "Configure os horarios de atendimento por dia.",
+    fn:     () => carregarHorarios()
+  },
+  imprevistos: {
+    titulo: "Imprevistos / Bloqueios",
+    desc:   "Bloqueie datas e periodos especificos.",
+    fn:     () => carregarImprevistos()
+  },
+  galeria: {
+    titulo: "Galeria de Fotos",
+    desc:   "Faca upload e gerencie as fotos do estabelecimento.",
+    fn:     () => carregarMidiasAdmin()
+  },
+  cursos: {
+    titulo: "Cursos Profissionais",
+    desc:   "Gerencie os cursos disponiveis para venda.",
+    fn:     () => carregarCursos()
+  },
+  agendamentos: {
+    titulo: "Agendamentos",
+    desc:   "Visualize e gerencie todos os agendamentos.",
+    fn:     () => carregarAgendamentos()
+  }
 };
 
+function switchTab(btn, chave) {
+  document.querySelectorAll(".sidebar-item")
+    .forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".tab-content")
+    .forEach((c) => c.classList.remove("ativo"));
+
+  btn.classList.add("active");
+  const tab = document.getElementById("tab-" + chave);
+  if (tab) tab.classList.add("ativo");
+
+  const meta = abas[chave];
+  if (meta) {
+    document.getElementById("breadcrumb-atual").textContent = meta.titulo;
+    document.getElementById("secao-titulo").textContent = meta.titulo;
+    document.getElementById("secao-desc").textContent = meta.desc;
+    document.querySelector(".admin-main")
+      .scrollTo({ top: 0, behavior: "smooth" });
+    meta.fn();
+  }
+}
+
+/* ============================================================
+   BADGES (contadores da sidebar)
+   ============================================================ */
+async function atualizarBadges() {
+  try {
+    const [servicos, barbeiros, imprevistos, galeria, cursos, agendamentos] =
+      await Promise.all([
+        fetch("http://localhost:8080/api/servicos?_=" + Date.now())
+          .then((r) => r.json()),
+        fetch("http://localhost:8080/api/barbeiros?_=" + Date.now())
+          .then((r) => r.json()),
+        fetch("http://localhost:8080/api/admin/imprevistos?_=" + Date.now(), {
+          headers: { Authorization: "Bearer " + getToken() }
+        }).then((r) => r.json()),
+        fetch("http://localhost:8080/api/galeria?_=" + Date.now())
+          .then((r) => r.json()),
+        fetch("http://localhost:8080/api/cursos?_=" + Date.now())
+          .then((r) => r.json()),
+        fetch("http://localhost:8080/api/agendamentos?_=" + Date.now() + "&status=confirmado")
+          .then((r) => r.json())
+      ]);
+
+    setBadge("badge-servicos",     servicos.length);
+    setBadge("badge-barbeiros",    barbeiros.length);
+    setBadge("badge-imprevistos",  imprevistos.length);
+    setBadge("badge-galeria",      galeria.length);
+    setBadge("badge-cursos",       cursos.length);
+    setBadge("badge-agendamentos", agendamentos.length);
+
+  } catch (e) {
+    console.error("Badges:", e.message);
+  }
+}
+
+function setBadge(id, valor) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (valor > 0) {
+    el.textContent = valor > 99 ? "99+" : valor;
+    el.classList.add("visivel");
+  } else {
+    el.classList.remove("visivel");
+  }
+}
+
+/* ============================================================
+   TOASTS E UTILITARIOS
+   ============================================================ */
 function mostrarSucesso(mensagem) {
   mostrarToast(mensagem, "sucesso");
 }
@@ -91,7 +191,6 @@ function renderEstadoTabela(tbody, colunas, mensagem, cor = "rgba(253,240,213,.3
 function atualizarEstadoBotaoUpload(ativo) {
   const botao = document.getElementById("btn-enviar");
   if (!botao) return;
-
   botao.disabled = !ativo;
   botao.style.opacity = ativo ? "1" : "0.4";
   botao.style.cursor = ativo ? "pointer" : "not-allowed";
@@ -137,6 +236,11 @@ function limparPreviewUpload() {
   if (botao) {
     botao.disabled = true;
     botao.style.opacity = "0.4";
+    dropZone.style.borderColor = "var(--taupe)";
+  }
+  if (botao) {
+    botao.disabled = true;
+    botao.style.opacity = "0.4";
     botao.style.cursor = "not-allowed";
   }
 }
@@ -155,13 +259,13 @@ function processarArquivo(arquivo) {
 
   const tiposPermitidos = ["image/jpeg", "image/png", "image/webp", "video/mp4"];
   if (!tiposPermitidos.includes(arquivo.type)) {
-    mostrarErro("Tipo nÃ£o permitido. Use JPG, PNG, WEBP ou MP4.");
+    mostrarErro("Tipo nao permitido. Use JPG, PNG, WEBP ou MP4.");
     limparPreviewUpload();
     return;
   }
 
   if (arquivo.size > 10 * 1024 * 1024) {
-    mostrarErro("Arquivo muito grande. MÃ¡ximo de 10MB.");
+    mostrarErro("Arquivo muito grande. Maximo de 10MB.");
     limparPreviewUpload();
     return;
   }
@@ -173,10 +277,10 @@ function processarArquivo(arquivo) {
   leitor.onload = (event) => {
     if (previewImg) previewImg.src = event.target.result;
     if (previewNome) {
-      previewNome.textContent = `${arquivo.name} â€” ${(arquivo.size / 1024).toFixed(0)} KB`;
+      previewNome.textContent = `${arquivo.name} - ${(arquivo.size / 1024).toFixed(0)} KB`;
     }
     if (previewWrap) previewWrap.style.display = "block";
-    if (textoPrincipal) textoPrincipal.textContent = `âœ“ ${arquivo.name}`;
+    if (textoPrincipal) textoPrincipal.textContent = `✓ ${arquivo.name}`;
     if (dropZone) dropZone.style.borderColor = "var(--dark-goldenrod)";
     atualizarEstadoBotaoUpload(true);
   };
@@ -204,64 +308,19 @@ function configurarUploadImagem() {
     event.preventDefault();
     dropZone.classList.remove("drag-over");
     const arquivo = event.dataTransfer?.files?.[0];
-    if (arquivo) {
-      processarArquivo(arquivo);
-    }
+    if (arquivo) processarArquivo(arquivo);
   });
 
   input.addEventListener("change", () => {
     const arquivo = input.files && input.files[0];
-    if (arquivo) {
-      processarArquivo(arquivo);
-    } else {
-      limparPreviewUpload();
-    }
+    if (arquivo) processarArquivo(arquivo);
+    else limparPreviewUpload();
   });
 }
 
-function bindTabs() {
-  document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".tab-pane").forEach((pane) => pane.classList.remove("active"));
-
-      btn.classList.add("active");
-      const painel = document.getElementById(btn.dataset.tab);
-      if (painel) painel.classList.add("active");
-
-      // Sempre recarrega os dados da aba selecionada.
-      const carregarAba = abaFuncoes[btn.dataset.tab];
-      if (typeof carregarAba === "function") {
-        carregarAba().catch((erro) => {
-          console.error("Falha ao carregar aba:", erro?.message || erro);
-        });
-      }
-    });
-  });
-}
-
-function initTabsScrollHint() {
-  const tabs = document.querySelector(".admin-tabs");
-  if (!tabs || tabs.dataset.scrollBound === "true") return;
-
-  const atualizarHint = () => {
-    const possuiOverflow = tabs.scrollWidth > tabs.clientWidth + 2;
-    const chegouFim = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 2;
-    tabs.classList.toggle("has-scroll-hint", possuiOverflow && !chegouFim && tabs.dataset.scrolled !== "true");
-  };
-
-  tabs.dataset.scrollBound = "true";
-  tabs.dataset.scrolled = "false";
-
-  tabs.addEventListener("scroll", () => {
-    if (tabs.scrollLeft > 8) tabs.dataset.scrolled = "true";
-    atualizarHint();
-  });
-
-  window.addEventListener("resize", atualizarHint);
-  atualizarHint();
-}
-
+/* ============================================================
+   MODAIS
+   ============================================================ */
 function abrirModalExcluir(nomeArquivo, cardElement) {
   const backdrop = document.createElement("div");
   backdrop.className = "modal-backdrop";
@@ -277,7 +336,6 @@ function abrirModalExcluir(nomeArquivo, cardElement) {
         <button class="btn-modal-cancelar" id="btn-cancelar-modal" type="button">Cancelar</button>
         <button class="btn-modal-excluir" id="btn-confirmar-excluir" type="button">Excluir</button>
       </div>
-    </div>
   `;
 
   document.body.appendChild(backdrop);
@@ -306,6 +364,185 @@ function abrirModalExcluir(nomeArquivo, cardElement) {
   document.addEventListener("keydown", escHandler);
 }
 
+function abrirModalConfirmar(titulo, mensagem, onConfirmar) {
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal-card" id="modal-card">
+      <div class="modal-titulo">${titulo}</div>
+      <div class="modal-mensagem">${mensagem}</div>
+      <div class="modal-acoes">
+        <button class="btn-modal-cancelar" id="btn-cancelar-modal" type="button">Cancelar</button>
+        <button class="btn-modal-excluir" id="btn-confirmar-modal" type="button">Confirmar</button>
+      </div>
+  `;
+
+  document.body.appendChild(backdrop);
+  document.body.style.overflow = "hidden";
+
+  function fechar() {
+    document.removeEventListener("keydown", escHandler);
+    backdrop.remove();
+    document.body.style.overflow = "";
+  }
+
+  function escHandler(event) {
+    if (event.key === "Escape") fechar();
+  }
+
+  backdrop.addEventListener("click", (event) => {
+    if (event.target === backdrop) fechar();
+  });
+
+  backdrop.querySelector("#btn-cancelar-modal")?.addEventListener("click", fechar);
+  backdrop.querySelector("#btn-confirmar-modal")?.addEventListener("click", async () => {
+    fechar();
+    if (typeof onConfirmar === "function") await onConfirmar();
+  });
+
+  document.addEventListener("keydown", escHandler);
+}
+
+/* ============================================================
+   CRUD — BARBEIROS
+   ============================================================ */
+async function carregarBarbeiros() {
+  const tbody = document.getElementById("tbody-barbeiros");
+  if (!tbody) return;
+
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--pale-oak-dim);padding:2rem">Carregando...</td></tr>';
+
+  try {
+    const res = await fetch("http://localhost:8080/api/barbeiros?_=" + Date.now(), {
+      headers: { "Cache-Control": "no-cache" }
+    });
+    const lista = await res.json();
+
+    if (!Array.isArray(lista) || !lista.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--pale-oak-dim);padding:2rem">Nenhum barbeiro cadastrado.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = lista.map((b) => `
+      <tr id="barbeiro-${b.id}">
+        <td>
+          <img src="${b.fotoUrl || ""}" alt="${b.nome}" onerror="this.src=''" style="width:40px;height:40px;object-fit:cover;border-radius:50%;border:1px solid var(--taupe-border)">
+        </td>
+        <td>${b.nome}</td>
+        <td>${b.especialidade || "-"}</td>
+        <td style="color:var(--dark-goldenrod)">${b.instagram || "-"}</td>
+        <td>
+          <span style="font-size:.78rem;color:${b.ativo ? "#4caf50" : "var(--pale-oak-dim)"}">
+            ${b.ativo ? "● Ativo" : "● Inativo"}
+          </span>
+        </td>
+        <td class="acoes-cell">
+          <button class="btn-acao btn-excluir-tabela" onclick="removerBarbeiro(${b.id}, '${String(b.nome).replace(/'/g, "\\'")}')">Remover</button>
+        </td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e05555;padding:2rem">Erro: ${e.message}</td></tr>`;
+  }
+}
+
+async function salvarBarbeiro() {
+  const nome = document.getElementById("nome-barbeiro")?.value.trim() || "";
+  const espec = document.getElementById("espec-barbeiro")?.value.trim() || "";
+  const insta = document.getElementById("insta-barbeiro")?.value.trim() || "";
+  const fotoEl = document.getElementById("foto-barbeiro");
+  const btn = document.getElementById("btn-salvar-barbeiro");
+
+  if (!nome) {
+    mostrarErro("Nome do barbeiro e obrigatorio.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("nome", nome);
+  formData.append("especialidade", espec);
+  formData.append("instagram", insta);
+  if (fotoEl?.files?.[0]) formData.append("foto", fotoEl.files[0]);
+
+  if (btn) {
+    btn.textContent = "Salvando...";
+    btn.disabled = true;
+  }
+
+  try {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", "http://localhost:8080/api/admin/barbeiros");
+    xhr.setRequestHeader("Authorization", "Bearer " + getToken());
+
+    xhr.onload = async () => {
+      if (btn) {
+        btn.textContent = "Adicionar Barbeiro";
+        btn.disabled = false;
+      }
+      let resp = {};
+      try { resp = JSON.parse(xhr.responseText || "{}"); } catch (_) { resp = {}; }
+
+      if (xhr.status === 200) {
+        mostrarSucesso("Barbeiro adicionado!");
+        document.getElementById("nome-barbeiro").value = "";
+        document.getElementById("espec-barbeiro").value = "";
+        document.getElementById("insta-barbeiro").value = "";
+        if (fotoEl) fotoEl.value = "";
+        const label = document.getElementById("label-foto-barbeiro");
+        if (label) label.textContent = "Clique para selecionar foto";
+        const preview = document.getElementById("preview-barbeiro");
+        if (preview) preview.style.display = "none";
+        await carregarBarbeiros();
+      } else {
+        mostrarErro(resp.mensagem || "Erro ao salvar.");
+      }
+    };
+
+    xhr.onerror = () => {
+      if (btn) {
+        btn.textContent = "Adicionar Barbeiro";
+        btn.disabled = false;
+      }
+      mostrarErro("Servidor offline.");
+    };
+
+    xhr.send(formData);
+  } catch (e) {
+    if (btn) {
+      btn.textContent = "Adicionar Barbeiro";
+      btn.disabled = false;
+    }
+    mostrarErro("Erro: " + e.message);
+  }
+}
+
+function removerBarbeiro(id, nome) {
+  abrirModalConfirmar(
+    "Remover Barbeiro",
+    `Tem certeza que deseja remover <strong>${nome}</strong>? Esta acao nao pode ser desfeita.`,
+    async () => {
+      try {
+        const res = await fetch("http://localhost:8080/api/admin/barbeiros/" + id, {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + getToken() }
+        });
+        const resp = await res.json();
+        if (res.ok) {
+          mostrarSucesso("Barbeiro removido!");
+          await carregarBarbeiros();
+        } else {
+          mostrarErro(resp.mensagem || "Erro ao remover.");
+        }
+      } catch (e) {
+        mostrarErro("Erro: " + e.message);
+      }
+    }
+  );
+}
+
+/* ============================================================
+   CRUD — SERVICOS
+   ============================================================ */
 async function carregarServicos() {
   const tabela = document.getElementById("tbody-servicos");
   if (!tabela) return;
@@ -372,6 +609,9 @@ async function salvarServico(e) {
   }
 }
 
+/* ============================================================
+   CRUD — HORARIOS
+   ============================================================ */
 async function carregarHorarios() {
   const tabela = document.getElementById("tbody-horarios");
   if (!tabela) return;
@@ -385,15 +625,15 @@ async function carregarHorarios() {
     const intervalo = document.getElementById("intervalo-padrao");
     if (intervalo) intervalo.value = horariosConfigCache.configuracao?.intervaloPadrao || 30;
 
-  const rotulos = {
-    segunda: "Segunda",
-    terca: "Terca",
-    quarta: "Quarta",
-    quinta: "Quinta",
-    sexta: "Sexta",
-    sabado: "Sabado",
-    domingo: "Domingo"
-  };
+    const rotulos = {
+      segunda: "Segunda",
+      terca: "Terca",
+      quarta: "Quarta",
+      quinta: "Quinta",
+      sexta: "Sexta",
+      sabado: "Sabado",
+      domingo: "Domingo"
+    };
 
     tabela.innerHTML = Object.keys(rotulos).map((dia) => {
       const d = dias[dia] || { ativo: false, inicio: null, fim: null };
@@ -457,6 +697,9 @@ function limparFormularioHorario() {
   preencherFormularioHorario(document.getElementById("dia-semana").value);
 }
 
+/* ============================================================
+   CRUD — IMPREVISTOS
+   ============================================================ */
 async function carregarImprevistos() {
   const tabela = document.getElementById("tbody-imprevistos");
   if (!tabela) return;
@@ -504,6 +747,9 @@ async function salvarImprevisto(e) {
   }
 }
 
+/* ============================================================
+   CRUD — MIDIAS / GALERIA
+   ============================================================ */
 async function carregarMidiasAdmin() {
   await API.carregarGaleria();
 }
@@ -515,7 +761,6 @@ async function excluirMidia(id) {
 
 function uploadMidia(arquivo, titulo, categoria, onProgress = () => {}) {
   return new Promise((resolve, reject) => {
-    // Garante sessao valida antes de iniciar o envio.
     if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
       reject(new Error("Faca login como administrador primeiro."));
       return;
@@ -570,7 +815,6 @@ function uploadMidia(arquivo, titulo, categoria, onProgress = () => {}) {
       reject(new Error("Upload cancelado."));
     });
 
-    // Sequencia obrigatoria para multipart com token.
     xhr.open("POST", "http://localhost:8080/api/admin/upload");
     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
     xhr.send(formData);
@@ -586,9 +830,7 @@ function diagnosticarToken() {
   console.log("Token:", token);
   console.log("Header que sera enviado:", `Bearer ${token}`);
 
-  alert(
-    `Logado: ${logado}\nToken: ${token}\nVerifique o console (F12).`
-  );
+  alert(`Logado: ${logado}\nToken: ${token}\nVerifique o console (F12).`);
 }
 
 async function uploadFoto(e) {
@@ -610,9 +852,7 @@ async function uploadFoto(e) {
 
   if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
     mostrarErro("Faca login como administrador primeiro.");
-    setTimeout(() => {
-      window.location.href = "login.html";
-    }, 1500);
+    setTimeout(() => { window.location.href = "login.html"; }, 1500);
     return;
   }
 
@@ -622,25 +862,21 @@ async function uploadFoto(e) {
 
   try {
     const online = await API.checkServerOnline();
-    if (!online) {
-      throw new Error("Spring Boot nao esta rodando. Inicie o servidor.");
-    }
+    if (!online) throw new Error("Spring Boot nao esta rodando. Inicie o servidor.");
 
     await uploadMidia(arquivo, titulo, categoria, (percentual) => {
       atualizarProgresso(percentual);
     });
 
     await API.carregarGaleria();
-    mostrarSucesso("Imagem adicionada Ã  galeria com sucesso!");
+    mostrarSucesso("Imagem adicionada a galeria com sucesso!");
     e.target.reset();
     limparPreviewUpload();
   } catch (error) {
     const message = error?.message || "Falha ao enviar imagem.";
     if (message.toLowerCase().includes("sessao expirada")) {
       mostrarErro(message);
-      if (typeof fazerLogout === "function") {
-        fazerLogout();
-      }
+      if (typeof fazerLogout === "function") fazerLogout();
       return;
     }
     mostrarErro(`Erro no upload: ${message}`);
@@ -650,216 +886,3 @@ async function uploadFoto(e) {
 }
 
 async function salvarVideo(e) {
-  e.preventDefault();
-  await API.adminMidias.createVideo({
-    categoria: document.getElementById("video-categoria").value,
-    titulo: document.getElementById("video-titulo").value,
-    url: document.getElementById("video-url").value
-  });
-  e.target.reset();
-  await carregarMidiasAdmin();
-}
-
-async function carregarCursos() {
-  const tabela = document.getElementById("tbody-cursos");
-  if (!tabela) return;
-
-  renderEstadoTabela(tabela, 4, "Carregando...");
-
-  try {
-    const cursos = await API.adminCursos.list();
-    if (!Array.isArray(cursos) || !cursos.length) {
-      renderEstadoTabela(tabela, 4, "Nenhum curso cadastrado.");
-      return;
-    }
-
-    tabela.innerHTML = cursos.map((curso) => `
-    <tr>
-      <td>${curso.titulo}</td>
-      <td>R$ ${Number(curso.preco || 0).toFixed(2)}</td>
-      <td>${curso.cargaHoraria}</td>
-      <td>
-        <div class="acoes-cell">
-          <button class="btn-acao btn-editar" type="button" onclick='editarCurso(${JSON.stringify(curso)})'>Editar</button>
-          <button class="btn-acao btn-excluir-tabela" type="button" onclick="excluirCurso(${curso.id})">Excluir</button>
-        </div>
-      </td>
-    </tr>
-  `).join("");
-  } catch (erro) {
-    renderEstadoTabela(tabela, 4, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#e05555");
-  }
-}
-
-function editarCurso(curso) {
-  document.getElementById("curso-id").value = curso.id;
-  document.getElementById("titulo-curso").value = curso.titulo || "";
-  document.getElementById("desc-curso").value = curso.descricao || "";
-  document.getElementById("preco-curso").value = curso.preco ?? "";
-  document.getElementById("carga-curso").value = curso.cargaHoraria || "";
-  document.getElementById("imagem-curso").value = curso.imagemUrl || "";
-  document.getElementById("link-curso").value = curso.linkCompra || "";
-}
-
-async function excluirCurso(id) {
-  await API.adminCursos.delete(id);
-  await carregarCursos();
-}
-
-async function salvarCurso(e) {
-  e.preventDefault();
-  const id = document.getElementById("curso-id").value;
-  const payload = {
-    titulo: document.getElementById("titulo-curso").value,
-    descricao: document.getElementById("desc-curso").value,
-    preco: Number(document.getElementById("preco-curso").value),
-    cargaHoraria: document.getElementById("carga-curso").value,
-    imagemUrl: document.getElementById("imagem-curso").value,
-    linkCompra: document.getElementById("link-curso").value
-  };
-
-  try {
-    if (id) await API.adminCursos.update(id, payload);
-    else await API.adminCursos.create(payload);
-
-    e.target.reset();
-    mostrarSucesso("Curso salvo com sucesso!");
-    await carregarCursos();
-  } catch (erro) {
-    mostrarErro(`Erro ao salvar curso: ${erro?.message || "falha desconhecida"}`);
-  }
-}
-
-async function carregarAgendamentos() {
-  const tabela = document.getElementById("tbody-agendamentos");
-  if (tabela) {
-    renderEstadoTabela(tabela, 6, "Carregando...");
-  }
-
-  const data = document.getElementById("filtro-data")?.value || "";
-  try {
-    agendamentosCache = await API.adminAgendamentos.list(data);
-    filtrarAgendamentos();
-  } catch (erro) {
-    if (tabela) {
-      renderEstadoTabela(tabela, 6, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#e05555");
-    }
-  }
-}
-
-function formatarData(dataIso) {
-  if (!dataIso || !String(dataIso).includes("-")) return dataIso || "-";
-  const [ano, mes, dia] = String(dataIso).split("-");
-  return `${dia}/${mes}/${ano}`;
-}
-
-function badgeStatus(status) {
-  const valor = String(status || "pendente").toLowerCase();
-  const estilos = {
-    confirmado: "color:#4caf50",
-    pendente: "color:#f59e0b",
-    cancelado: "color:#e05555",
-    concluido: "color:rgba(207,189,166,0.4)"
-  };
-  const estilo = estilos[valor] || estilos.pendente;
-  return `<span style="font-size:0.82rem;${estilo}">â— ${valor}</span>`;
-}
-
-function renderizarAgendamento(ag) {
-  const status = String(ag?.status || "pendente").toLowerCase();
-  const jaFinalizado = status === "cancelado" || status === "concluido";
-
-  const acoes = jaFinalizado
-    ? `<span style="font-size:0.75rem;color:rgba(253,240,213,0.25);letter-spacing:0.08em;text-transform:uppercase;">-</span>`
-    : `<button class="btn secondary btn-cancelar-ag" type="button" onclick="cancelarAgendamento(${ag.id}, this)">Cancelar</button>`;
-
-  return `
-    <tr>
-      <td>${ag.nome || "-"}</td>
-      <td>${ag.servico || "-"}</td>
-      <td>${formatarData(ag.data)}</td>
-      <td>${ag.horario || "-"}</td>
-      <td>${badgeStatus(status)}</td>
-      <td>${acoes}</td>
-    </tr>
-  `;
-}
-
-function filtrarAgendamentos() {
-  const tabela = document.getElementById("tbody-agendamentos");
-  if (!tabela) return;
-
-  const filtro = (document.getElementById("filtro-status")?.value || "todos").toLowerCase();
-  const filtrados = agendamentosCache.filter((agendamento) => {
-    const status = String(agendamento?.status || "pendente").toLowerCase();
-    return filtro === "todos" || status === filtro;
-  });
-
-  if (!filtrados.length) {
-    tabela.innerHTML = '<tr><td colspan="6">Nenhum agendamento encontrado para o filtro selecionado.</td></tr>';
-    return;
-  }
-
-  tabela.innerHTML = filtrados.map((agendamento) => renderizarAgendamento(agendamento)).join("");
-}
-
-async function cancelarAgendamento(id, botao) {
-  try {
-    if (botao) {
-      botao.disabled = true;
-      botao.textContent = "Cancelando...";
-    }
-
-    await API.adminAgendamentos.cancel(id);
-    await carregarAgendamentos();
-  } catch (error) {
-    alert(error?.message || "Nao foi possivel cancelar o agendamento.");
-  }
-}
-
-function bindLogout() {
-  const botao = document.getElementById("logout");
-  if (!botao) return;
-  botao.addEventListener("click", () => {
-    if (typeof fazerLogout === "function") {
-      fazerLogout();
-    } else {
-      window.location.href = "login.html";
-    }
-  });
-}
-
-window.abrirModalExcluir = abrirModalExcluir;
-window.filtrarAgendamentos = filtrarAgendamentos;
-window.editarServico = editarServico;
-window.excluirServico = excluirServico;
-window.editarHorario = editarHorario;
-window.excluirImprevisto = excluirImprevisto;
-window.excluirCurso = excluirCurso;
-window.cancelarAgendamento = cancelarAgendamento;
-window.diagnosticarToken = diagnosticarToken;
-
-window.addEventListener("DOMContentLoaded", async () => {
-  requireAuth();
-  await validarSessaoAdmin();
-
-  bindTabs();
-  initTabsScrollHint();
-  bindLogout();
-  configurarUploadImagem();
-
-  document.getElementById("form-servico")?.addEventListener("submit", salvarServico);
-  document.getElementById("form-horarios")?.addEventListener("submit", salvarHorario);
-  document.getElementById("dia-semana")?.addEventListener("change", (event) => preencherFormularioHorario(event.target.value));
-  document.getElementById("horarios-reset")?.addEventListener("click", limparFormularioHorario);
-  document.getElementById("form-imprevisto")?.addEventListener("submit", salvarImprevisto);
-  document.getElementById("form-foto")?.addEventListener("submit", uploadFoto);
-  document.getElementById("form-video")?.addEventListener("submit", salvarVideo);
-  document.getElementById("form-curso")?.addEventListener("submit", salvarCurso);
-  document.getElementById("btn-filtrar-data")?.addEventListener("click", carregarAgendamentos);
-
-  // Carrega dados da primeira aba no startup.
-  await carregarServicos();
-});
-
-
