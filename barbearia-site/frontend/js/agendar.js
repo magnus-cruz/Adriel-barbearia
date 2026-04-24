@@ -1,60 +1,21 @@
-let servicosCache = [];
+﻿/* ================================================
+   Alpha Barber - agendar.js
+   Funcao: fluxo publico de agendamento com WhatsApp
+   do barbeiro selecionado.
+   ================================================ */
 
-function mostrarErro(msg) {
-  alert(msg);
-}
+'use strict';
 
-function mostrarSucesso(msg) {
-  alert(msg);
-}
-
-function formatarData(data) {
-  if (!data || !String(data).includes('-')) return data;
-  const [ano, mes, dia] = String(data).split('-');
-  return `${dia}/${mes}/${ano}`;
-}
-
-function prepararDataInicial() {
-  const dataInput = document.getElementById('input-data');
-  if (!dataInput) return;
-
-  const hoje = new Date();
-  const yyyy = hoje.getFullYear();
-  const mm = String(hoje.getMonth() + 1).padStart(2, '0');
-  const dd = String(hoje.getDate()).padStart(2, '0');
-  const dataHoje = `${yyyy}-${mm}-${dd}`;
-  dataInput.min = dataHoje;
-  if (!dataInput.value) dataInput.value = dataHoje;
-}
+/* Dados dos barbeiros em memoria */
+let barbeirosDisponiveis = [];
 
 async function carregarServicosSelect() {
   const select = document.getElementById('select-servico');
-  const info = document.getElementById('info-servico');
   if (!select) return;
 
-  select.innerHTML = "<option value=''>Carregando servicos...</option>";
-  if (info) info.textContent = '';
-
-  try {
-    const lista = await API.getServicos();
-    servicosCache = Array.isArray(lista) ? lista : [];
-    const ativos = servicosCache.filter((servico) => servico.ativo !== false);
-
-    if (!ativos.length) {
-      select.innerHTML = "<option value=''>Nenhum servico disponivel</option>";
-      return;
-    }
-
-    select.innerHTML = ativos.map((servico) => `
-      <option value="${servico.nome}" data-duracao="${servico.duracaoMinutos}" data-preco="${servico.preco}">
-        ${servico.nome} (${servico.duracaoMinutos}min) - R$ ${Number(servico.preco || 0).toFixed(2)}
-      </option>
-    `).join('');
-
-    atualizarInfoServico();
-  } catch (error) {
-    select.innerHTML = "<option value=''>Erro ao carregar servicos</option>";
-  }
+  const servicos = await API.servicos();
+  select.innerHTML = '<option value="">Selecione</option>' +
+    servicos.map((s) => `<option value="${s.nome}">${s.nome} - ${API.formatarMoeda(s.preco)}</option>`).join('');
 }
 
 async function carregarBarbeirosSelect() {
@@ -62,77 +23,74 @@ async function carregarBarbeirosSelect() {
   if (!select) return;
 
   try {
-    const res = await fetch('http://localhost:8080/api/barbeiros?_=' + Date.now());
-    const lista = await res.json();
-    const ativos = (Array.isArray(lista) ? lista : []).filter((b) => b.ativo !== false);
+    barbeirosDisponiveis = await API.barbeiros();
+    select.innerHTML = '<option value="">Qualquer barbeiro disponivel</option>';
 
-    select.innerHTML = '<option value="Qualquer barbeiro">Qualquer barbeiro disponivel</option>';
-
-    ativos.forEach((b) => {
+    barbeirosDisponiveis.forEach((b) => {
       const opt = document.createElement('option');
       opt.value = b.nome;
-      opt.textContent = b.nome + (b.especialidade ? ' - ' + b.especialidade : '');
+      opt.dataset.id = b.id;
+      opt.dataset.wpp = b.whatsapp || '';
+      opt.dataset.esp = b.especialidade || '';
+      opt.textContent = b.nome + (b.especialidade ? ` - ${b.especialidade}` : '');
       select.appendChild(opt);
     });
   } catch (e) {
-    console.error('Erro ao carregar barbeiros:', e.message);
+    console.error('Barbeiros:', e.message);
   }
 }
 
-function atualizarInfoServico() {
-  const select = document.getElementById('select-servico');
-  const info = document.getElementById('info-servico');
-  if (!select || !info) return;
+async function carregarHorariosDisponiveis() {
+  const data = document.getElementById('input-data')?.value || '';
+  const servico = document.getElementById('select-servico')?.value || '';
+  const select = document.getElementById('select-horario');
 
-  const option = select.selectedOptions[0];
-  if (!option) {
-    info.textContent = '';
+  if (!select) return;
+
+  if (!data) {
+    select.innerHTML = '<option value="">Selecione a data</option>';
     return;
   }
 
-  const duracao = option.dataset.duracao || '-';
-  const preco = Number(option.dataset.preco || 0).toFixed(2);
-  info.textContent = `Duracao: ${duracao} min | Valor: R$ ${preco}`;
-}
-
-async function tentarCarregarHorarios() {
-  const data = document.getElementById('input-data')?.value;
-  const servico = document.getElementById('select-servico')?.value;
-  if (!data || !servico) return;
-  await carregarHorariosDisponiveis(data, servico);
-}
-
-async function carregarHorariosDisponiveis(data, servico) {
-  const select = document.getElementById('select-horario');
-  if (!select) return;
-
-  select.innerHTML = "<option value=''>Carregando horarios...</option>";
-  try {
-    const slots = await API.getDisponibilidade(data, servico);
-    const lista = Array.isArray(slots) ? slots : [];
-
-    if (!lista.length) {
-      select.innerHTML = "<option value=''>Nenhum horario disponivel</option>";
-      return;
-    }
-
-    select.innerHTML = lista.map((horario) => `<option value="${horario}">${horario}</option>`).join('');
-  } catch (error) {
-    select.innerHTML = "<option value=''>Erro ao buscar horarios</option>";
-    console.error('Horarios:', error?.message || error);
+  const horarios = await API.disponibilidade(data, servico);
+  if (!horarios.length) {
+    select.innerHTML = '<option value="">Sem horarios disponiveis</option>';
+    return;
   }
+
+  select.innerHTML = '<option value="">Selecione</option>' +
+    horarios.map((h) => `<option value="${h}">${h}</option>`).join('');
 }
 
+/* WhatsApp no botao de confirmacao com dados do barbeiro */
+function gerarLinkWhatsApp(dados) {
+  const barbeiro = barbeirosDisponiveis.find((b) => b.nome === dados.barbeiro);
+  const numero = barbeiro?.whatsapp ? `55${barbeiro.whatsapp}` : '55NUMERODABARBEARIA';
+
+  const msg = encodeURIComponent(
+    'Alpha Barber - Agendamento\n\n' +
+    `Nome: ${dados.nome}\n` +
+    `Servico: ${dados.servico}\n` +
+    `Barbeiro: ${dados.barbeiro || 'Qualquer'}\n` +
+    `Data: ${API.formatarData(dados.data)}\n` +
+    `Horario: ${dados.horario}\n\n` +
+    'Aguardo confirmacao!'
+  );
+
+  return `https://wa.me/${numero}?text=${msg}`;
+}
+
+/* Apos confirmar agendamento */
 async function confirmarAgendamento(event) {
   event.preventDefault();
 
   const dados = {
-    nome: document.getElementById('nome')?.value.trim() || '',
-    telefone: document.getElementById('telefone')?.value.trim() || '',
-    servico: document.getElementById('select-servico')?.value || '',
-    barbeiro: document.getElementById('select-barbeiro')?.value || 'Qualquer barbeiro',
-    data: document.getElementById('input-data')?.value || '',
-    horario: document.getElementById('select-horario')?.value || ''
+    nome: document.getElementById('input-nome').value.trim(),
+    telefone: document.getElementById('input-tel').value.trim(),
+    servico: document.getElementById('select-servico').value,
+    barbeiro: document.getElementById('select-barbeiro').value || 'Qualquer barbeiro',
+    data: document.getElementById('input-data').value,
+    horario: document.getElementById('select-horario').value
   };
 
   if (!dados.nome || !dados.telefone || !dados.servico || !dados.data || !dados.horario) {
@@ -141,69 +99,77 @@ async function confirmarAgendamento(event) {
   }
 
   try {
-    const res = await fetch('http://localhost:8080/api/agendamentos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(dados)
+    await API.agendar({
+      nome: dados.nome,
+      nomeCliente: dados.nome,
+      telefone: dados.telefone,
+      servico: dados.servico,
+      barbeiro: dados.barbeiro,
+      data: dados.data,
+      horario: dados.horario
     });
-    const resp = await res.json();
 
-    if (res.ok) {
-      mostrarSucesso(resp.mensagem || 'Agendamento confirmado!');
+    mostrarSucesso('Agendamento confirmado!');
 
-      const msg = encodeURIComponent(
-        'Ola! Gostaria de confirmar meu agendamento:\n'
-        + 'Nome: ' + dados.nome + '\n'
-        + 'Servico: ' + dados.servico + '\n'
-        + 'Barbeiro: ' + dados.barbeiro + '\n'
-        + 'Data: ' + formatarData(dados.data) + '\n'
-        + 'Horario: ' + dados.horario
-      );
-
-      const numero = typeof WHATSAPP_NUMERO === 'string' ? WHATSAPP_NUMERO : '5561999999999';
-      const botaoWpp = document.getElementById('btn-wpp-confirm');
-      if (botaoWpp) {
-        botaoWpp.href = 'https://wa.me/' + numero + '?text=' + msg;
-      }
-
-      const blocoConfirmacao = document.getElementById('confirmacao-wrap');
-      if (blocoConfirmacao) {
-        blocoConfirmacao.style.display = 'block';
-      }
-
-      await tentarCarregarHorarios();
-    } else {
-      mostrarErro(resp.mensagem || 'Erro ao agendar.');
-    }
+    const link = gerarLinkWhatsApp(dados);
+    const botao = document.getElementById('btn-confirmar-wpp');
+    const box = document.getElementById('confirmacao-box');
+    if (botao) botao.href = link;
+    if (box) box.style.display = 'block';
   } catch (e) {
-    mostrarErro('Servidor offline.');
+    mostrarErro(e.message || 'Erro ao agendar.');
   }
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  prepararDataInicial();
+  try {
+    await carregarServicosSelect();
+    await carregarBarbeirosSelect();
+    await carregarHorariosDisponiveis();
 
-  await Promise.all([
-    carregarServicosSelect(),
-    carregarBarbeirosSelect()
-  ]);
+    document.getElementById('input-data')?.addEventListener('change', () => {
+      carregarHorariosDisponiveis().catch((e) => mostrarErro(e.message));
+    });
 
-  const selectServico = document.getElementById('select-servico');
-  const inputData = document.getElementById('input-data');
-  const form = document.getElementById('agendamento-form');
-  const btnWhats = document.getElementById('btn-whatsapp');
+    document.getElementById('select-servico')?.addEventListener('change', () => {
+      carregarHorariosDisponiveis().catch((e) => mostrarErro(e.message));
+    });
 
-  selectServico?.addEventListener('change', () => {
-    atualizarInfoServico();
-    tentarCarregarHorarios();
-  });
-  inputData?.addEventListener('change', tentarCarregarHorarios);
-  form?.addEventListener('submit', confirmarAgendamento);
+    /* Ao mudar barbeiro selecionado */
+    document.getElementById('select-barbeiro')?.addEventListener('change', function mudarBarbeiro() {
+      const wrap = document.getElementById('info-barbeiro-wrap');
+      const nomeEl = document.getElementById('info-barbeiro-nome');
+      const especEl = document.getElementById('info-barbeiro-espec');
+      const btnWpp = document.getElementById('btn-wpp-barbeiro');
 
-  btnWhats?.addEventListener('click', () => {
-    const numero = typeof WHATSAPP_NUMERO === 'string' ? WHATSAPP_NUMERO : '5561999999999';
-    window.open(`https://wa.me/${numero}`, '_blank');
-  });
+      const valor = this.value;
 
-  await tentarCarregarHorarios();
+      if (!valor) {
+        if (wrap) wrap.style.display = 'none';
+        return;
+      }
+
+      const opt = this.selectedOptions[0];
+      const wpp = opt?.dataset.wpp || '';
+      const esp = opt?.dataset.esp || '';
+
+      if (nomeEl) nomeEl.textContent = valor;
+      if (especEl) especEl.textContent = esp;
+
+      if (btnWpp && wpp) {
+        btnWpp.href = `https://wa.me/55${wpp}`;
+        btnWpp.style.display = 'inline-flex';
+      } else if (btnWpp) {
+        btnWpp.style.display = 'none';
+      }
+
+      if (wrap) wrap.style.display = 'block';
+    });
+
+    document.getElementById('form-agendar')?.addEventListener('submit', (event) => {
+      confirmarAgendamento(event).catch((e) => mostrarErro(e.message));
+    });
+  } catch (erro) {
+    mostrarErro(erro.message || 'Falha ao carregar dados de agendamento.');
+  }
 });

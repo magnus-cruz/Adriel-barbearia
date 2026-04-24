@@ -1,247 +1,183 @@
-const API_BASE = "http://localhost:8080";
-let currentUploadXhr = null;
+/* ================================================
+   Alpha Barber - api.js
+   Funcao: centralizar chamadas HTTP para a API Node.
+   ================================================ */
 
-function endpointComNoCache(endpoint) {
-  const separador = endpoint.includes("?") ? "&" : "?";
-  return `${endpoint}${separador}_=${Date.now()}`;
+'use strict';
+
+const API_BASE = 'http://localhost:8080';
+
+function semCache(url) {
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}_=${Date.now()}`;
 }
 
-function resolveApiAssetUrl(url) {
-  if (!url) return "";
-  return url.startsWith("http") ? url : `${API_BASE}${url}`;
+function getTokenLocal() {
+  return localStorage.getItem('barber_admin_token') || '';
 }
 
-function adminHeaders(isJson = true) {
-  const token = typeof window.getToken === "function"
-    ? window.getToken()
-    : (localStorage.getItem("barber_admin_token") || "");
-  const headers = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-  if (isJson) headers["Content-Type"] = "application/json";
-  return headers;
+async function parseResposta(res) {
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.mensagem || `HTTP ${res.status}`);
+  }
+  return data;
 }
 
-async function apiRequest(method, endpoint, body = null, extraOptions = {}) {
-  const metodo = String(method || "GET").toUpperCase();
-  const endpointFinal = metodo === "GET" ? endpointComNoCache(endpoint) : endpoint;
-  const options = {
-    method: metodo,
-    headers: extraOptions.headers || {},
-    ...extraOptions
+async function apiGet(endpoint, admin = false) {
+  const headers = {
+    'Cache-Control': 'no-cache, no-store',
+    Pragma: 'no-cache'
   };
 
-  if (metodo === "GET") {
-    options.headers = {
-      "Cache-Control": "no-cache",
-      ...options.headers
-    };
+  if (admin) headers.Authorization = `Bearer ${getTokenLocal()}`;
+
+  const res = await fetch(semCache(`${API_BASE}${endpoint}`), {
+    method: 'GET',
+    headers
+  });
+
+  if (res.status === 401 && admin) {
+    window.location.href = '/admin/login.html';
+    throw new Error('Sessao expirada.');
   }
 
-  if (body !== null && body !== undefined) {
-    if (body instanceof FormData) {
-      options.body = body;
-    } else {
-      options.headers = { "Content-Type": "application/json", ...options.headers };
-      options.body = JSON.stringify(body);
-    }
-  }
-
-  let response;
-  try {
-    response = await fetch(`${API_BASE}${endpointFinal}`, options);
-  } catch (error) {
-    throw new Error("Spring Boot nao esta rodando. Inicie o servidor.");
-  }
-
-  const contentType = response.headers.get("content-type") || "";
-  const responseBody = contentType.includes("application/json")
-    ? await response.json().catch(() => ({}))
-    : await response.text().catch(() => "");
-
-  if (!response.ok) {
-    if (response.status >= 500) {
-      throw new Error("Erro interno do servidor.");
-    }
-
-    if (response.status >= 400) {
-      if (typeof responseBody === "object" && responseBody?.mensagem) {
-        throw new Error(responseBody.mensagem);
-      }
-      throw new Error(typeof responseBody === "string" && responseBody ? responseBody : "Erro na requisicao.");
-    }
-  }
-
-  return responseBody;
+  return parseResposta(res);
 }
 
-async function checkServerOnline() {
-  try {
-    const response = await fetch(`${API_BASE}${endpointComNoCache("/api/health")}`, {
-      method: "GET",
-      headers: { "Cache-Control": "no-cache" }
-    });
-    return response.ok;
-  } catch (error) {
-    return false;
-  }
-}
+async function apiRequest(method, endpoint, body, admin = false) {
+  const headers = {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-cache'
+  };
 
-function cancelUpload() {
-  if (currentUploadXhr) {
-    currentUploadXhr.abort();
-    currentUploadXhr = null;
-  }
-}
+  if (admin) headers.Authorization = `Bearer ${getTokenLocal()}`;
 
-async function carregarGaleria() {
-  const lista = await apiRequest("GET", "/api/galeria");
-  const itens = Array.isArray(lista) ? lista : [];
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined
+  });
 
-  if (typeof window.renderGaleria === "function") {
-    window.renderGaleria(itens);
+  if (res.status === 401 && admin) {
+    window.location.href = '/admin/login.html';
+    throw new Error('Sessao expirada.');
   }
 
-  return itens;
+  return parseResposta(res);
 }
 
-function normalizarMidias(lista) {
-  return (Array.isArray(lista) ? lista : []).map((item) => ({
-    tipo: (item.tipo || "").startsWith("video/") ? "video" : "foto",
-    categoria: item.categoria || item.category || "Galeria",
-    titulo: item.titulo || item.nome || "Arquivo",
-    url: item.url,
-    nome: item.nome,
-    nomeArquivo: item.nomeArquivo || item.nome || (item.url ? String(item.url).split("/").pop() : ""),
-    dataUpload: item.dataUpload,
-    mime: item.tipo
-  }));
-}
-
-function uploadMidia(file, metadata = {}, onProgress = () => {}) {
+function apiUpload(endpoint, formData, onProgress) {
   return new Promise((resolve, reject) => {
-    if (!(file instanceof File)) {
-      reject(new Error("Arquivo invalido para upload."));
-      return;
+    const xhr = new XMLHttpRequest();
+    const token = getTokenLocal();
+
+    if (onProgress) {
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const pct = Math.round((event.loaded / event.total) * 100);
+          onProgress(pct);
+        }
+      });
     }
 
-    const formData = new FormData();
-    formData.append("file", file);
-    if (metadata?.titulo) formData.append("titulo", metadata.titulo);
-    if (metadata?.categoria) formData.append("categoria", metadata.categoria);
-
-    const xhr = new XMLHttpRequest();
-    currentUploadXhr = xhr;
-
-    xhr.open("POST", `${API_BASE}/api/admin/upload`, true);
-
-    xhr.upload.addEventListener("progress", (event) => {
-      if (!event.lengthComputable) return;
-      const percentual = Math.round((event.loaded / event.total) * 100);
-      onProgress(percentual);
-    });
-
-    xhr.addEventListener("load", () => {
-      currentUploadXhr = null;
-      let body = {};
-      try {
-        body = JSON.parse(xhr.responseText || "{}");
-      } catch (error) {
-        body = {};
+    xhr.addEventListener('load', () => {
+      const data = JSON.parse(xhr.responseText || '{}');
+      if (xhr.status === 401) {
+        window.location.href = '/admin/login.html';
+        reject(new Error('Sessao expirada.'));
+        return;
       }
-
       if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(body);
-        return;
+        resolve(data);
+      } else {
+        reject(new Error(data.mensagem || `HTTP ${xhr.status}`));
       }
-
-      if (xhr.status >= 500) {
-        reject(new Error("Erro interno do servidor."));
-        return;
-      }
-
-      if (xhr.status >= 400) {
-        reject(new Error(body?.mensagem || "Arquivo invalido."));
-        return;
-      }
-
-      reject(new Error("Falha inesperada no upload."));
     });
 
-    xhr.addEventListener("error", async () => {
-      currentUploadXhr = null;
-      const online = await checkServerOnline();
-      if (!online) {
-        reject(new Error("Spring Boot nao esta rodando. Inicie o servidor."));
-        return;
-      }
-      reject(new Error("Erro de CORS. Verifique o CorsConfig.java."));
-    });
+    xhr.addEventListener('error', () => reject(new Error('Servidor offline.')));
+    xhr.addEventListener('abort', () => reject(new Error('Upload cancelado.')));
 
-    xhr.addEventListener("abort", () => {
-      currentUploadXhr = null;
-      reject(new Error("Upload cancelado pelo usuario."));
-    });
-
+    xhr.open('POST', `${API_BASE}${endpoint}`);
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
     xhr.send(formData);
   });
 }
 
+async function verificarServidor() {
+  try {
+    const res = await fetch(semCache(`${API_BASE}/api/health`));
+    return res.ok;
+  } catch (_) {
+    return false;
+  }
+}
+
+function formatarData(dataStr) {
+  if (!dataStr) return '-';
+  const [ano, mes, dia] = dataStr.split('-');
+  return `${dia}/${mes}/${ano}`;
+}
+
+function formatarMoeda(valor) {
+  return `R$ ${Number(valor || 0).toFixed(2).replace('.', ',')}`;
+}
+
 const API = {
-  API_BASE,
+  base: API_BASE,
+  semCache,
+  apiGet,
   apiRequest,
-  checkServerOnline,
-  uploadMidia,
-  cancelUpload,
-  resolveApiAssetUrl,
-  carregarGaleria,
+  apiUpload,
+  verificarServidor,
+  formatarData,
+  formatarMoeda,
 
-  getServicos: () => apiRequest("GET", "/api/servicos"),
-  getCursos: () => apiRequest("GET", "/api/cursos"),
-  getMidias: async () => normalizarMidias(await apiRequest("GET", "/api/galeria")),
-  getDisponibilidade: (data, servico) => apiRequest("GET", `/api/horarios/disponiveis?data=${encodeURIComponent(data)}&servico=${encodeURIComponent(servico || "")}`),
-  criarAgendamento: (payload) => apiRequest("POST", "/api/agendamentos", payload),
+  health: () => apiGet('/api/health'),
+  servicos: () => apiGet('/api/servicos'),
+  barbeiros: () => apiGet('/api/barbeiros'),
+  horarios: () => apiGet('/api/horarios'),
+  disponibilidade: (data, servico) => apiGet(`/api/horarios/disponiveis?data=${encodeURIComponent(data)}&servico=${encodeURIComponent(servico || '')}`),
+  agendar: (payload) => apiRequest('POST', '/api/agendamentos', payload),
+  galeria: () => apiGet('/api/galeria'),
 
-  adminLogin: (usuario, senha) => apiRequest("POST", "/api/admin/login", { usuario, senha }),
-  adminCheck: () => apiRequest("GET", "/api/admin/check", null, { headers: adminHeaders(false) }),
+  adminCheck: () => apiGet('/api/admin/check', true),
+  adminLogin: (usuario, senha) => apiRequest('POST', '/api/admin/login', { usuario, senha }),
 
   adminServicos: {
-    list: () => apiRequest("GET", "/api/admin/servicos", null, { headers: adminHeaders(false) }),
-    create: (payload) => apiRequest("POST", "/api/admin/servicos", payload, { headers: adminHeaders() }),
-    update: (id, payload) => apiRequest("PUT", `/api/admin/servicos/${id}`, payload, { headers: adminHeaders() }),
-    delete: (id) => apiRequest("DELETE", `/api/admin/servicos/${id}`, null, { headers: adminHeaders(false) })
+    listar: () => apiGet('/api/admin/servicos', true),
+    criar: (payload) => apiRequest('POST', '/api/admin/servicos', payload, true),
+    atualizar: (id, payload) => apiRequest('PUT', `/api/admin/servicos/${id}`, payload, true),
+    excluir: (id) => apiRequest('DELETE', `/api/admin/servicos/${id}`, null, true)
+  },
+
+  adminBarbeiros: {
+    listar: () => apiGet('/api/admin/barbeiros', true),
+    excluir: (id) => apiRequest('DELETE', `/api/admin/barbeiros/${id}`, null, true),
+    salvarComFoto: (formData) => apiUpload('/api/admin/barbeiros', formData),
+    pausar: (id, pausado, motivoPausa) => apiRequest('PATCH', `/api/admin/barbeiros/${id}/pausar`, { pausado, motivoPausa }, true)
   },
 
   adminHorarios: {
-    get: () => apiRequest("GET", "/api/horarios"),
-    update: (payload) => apiRequest("POST", "/api/admin/horarios", payload, { headers: adminHeaders() })
+    salvar: (payload) => apiRequest('POST', '/api/admin/horarios', payload, true)
   },
 
   adminImprevistos: {
-    list: () => apiRequest("GET", "/api/admin/imprevistos", null, { headers: adminHeaders(false) }),
-    create: (payload) => apiRequest("POST", "/api/admin/imprevistos", payload, { headers: adminHeaders() }),
-    delete: (id) => apiRequest("DELETE", `/api/admin/imprevistos/${id}`, null, { headers: adminHeaders(false) })
-  },
-
-  adminMidias: {
-    list: () => apiRequest("GET", "/api/galeria"),
-    delete: (nomeArquivo) => apiRequest("DELETE", `/api/admin/galeria/${encodeURIComponent(nomeArquivo)}`, null, { headers: adminHeaders(false) }),
-    createVideo: (payload) => apiRequest("POST", "/api/midias/video", payload, { headers: adminHeaders() }),
-    uploadFoto: (file, metadata, onProgress) => uploadMidia(file, metadata, onProgress)
-  },
-
-  adminCursos: {
-    list: () => apiRequest("GET", "/api/admin/cursos", null, { headers: adminHeaders(false) }),
-    create: (payload) => apiRequest("POST", "/api/admin/cursos", payload, { headers: adminHeaders() }),
-    update: (id, payload) => apiRequest("PUT", `/api/admin/cursos/${id}`, payload, { headers: adminHeaders() }),
-    delete: (id) => apiRequest("DELETE", `/api/admin/cursos/${id}`, null, { headers: adminHeaders(false) })
+    listar: () => apiGet('/api/admin/imprevistos', true),
+    criar: (payload) => apiRequest('POST', '/api/admin/imprevistos', payload, true),
+    excluir: (id) => apiRequest('DELETE', `/api/admin/imprevistos/${id}`, null, true)
   },
 
   adminAgendamentos: {
-    list: (data = "") => apiRequest("GET", `/api/admin/agendamentos${data ? `?data=${data}` : ""}`, null, { headers: adminHeaders(false) }),
-    cancel: (id) => apiRequest("PUT", `/api/admin/agendamentos/${id}/cancelar`, null, { headers: adminHeaders(false) })
+    listar: (dataMin) => apiGet(`/api/admin/agendamentos${dataMin ? `?data=${encodeURIComponent(dataMin)}` : ''}`, true),
+    cancelar: (id) => apiRequest('PUT', `/api/admin/agendamentos/${id}/cancelar`, null, true)
+  },
+
+  adminMidia: {
+    upload: (formData, onProgress) => apiUpload('/api/admin/upload', formData, onProgress),
+    excluir: (nomeArquivo) => apiRequest('DELETE', `/api/admin/galeria/${encodeURIComponent(nomeArquivo)}`, null, true),
+    criarVideo: (payload) => apiRequest('POST', '/api/midias/video', payload, true)
   }
 };
 
 window.API = API;
-window.resolveApiAssetUrl = resolveApiAssetUrl;
-window.carregarGaleria = carregarGaleria;

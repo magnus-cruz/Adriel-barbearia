@@ -1,69 +1,70 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alpha Barber | Galeria</title>
+  <!-- ================================================
+       Alpha Barber - galeria.html
+       Funcao: galeria publica de fotos e videos.
+       ================================================ -->
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alpha Barber - Galeria</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/galeria.css">
 </head>
 <body class="pagina-publica">
-  <header class="topbar">
-    <div class="container">
-      <nav>
-        <div class="logo-alpha-barber">
-          <img src="/img/logo-alpha-barber.png"
-               alt="Alpha Barber"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-          <div class="logo-texto" style="display:none">
-            <span class="logo-alpha">ALPHA</span>
-            <span class="logo-barber"><span class="logo-accent">B</span>ARBER</span>
-          </div>
-        </div>
-
-        <ul class="nav-links" id="nav-links">
-          <li><a href="index.html">Home</a></li>
-          <li><a href="agendar.html">Agendar</a></li>
-          <li><a class="active" href="galeria.html">Galeria</a></li>
-          <li><a href="cursos.html">Cursos</a></li>
-          <li><a href="localizacao.html">Localizacao</a></li>
-          <li><a class="btn-admin-nav" href="admin/login.html">Admin</a></li>
-        </ul>
-
-        <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" onclick="toggleMenu()">
-          <span class="ham-line"></span>
-          <span class="ham-line"></span>
-          <span class="ham-line"></span>
-        </button>
-      </nav>
-    </div>
-  </header>
+  <header class="site-header"><div class="container"><nav><a href="index.html" class="logo-alpha-barber"><img src="img/logo-alpha-barber.png" alt="Alpha Barber" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="logo-texto" style="display:none"><span class="logo-alpha">ALPHA</span><span class="logo-barber"><span class="logo-accent">B</span>ARBER</span></div></a><ul class="nav-links" id="nav-links"><li><a href="index.html">Home</a></li><li><a href="agendar.html">Agendar</a></li><li><a href="galeria.html">Galeria</a></li><li><a href="localizacao.html">Localizacao</a></li><li><a href="admin/login.html" class="btn-admin-nav">Admin</a></li></ul><button class="hamburger" id="hamburger" aria-label="Abrir menu" aria-expanded="false" onclick="toggleMenu()"><span class="ham-line"></span><span class="ham-line"></span><span class="ham-line"></span></button></nav></div></header>
   <div class="nav-overlay" id="nav-overlay" onclick="fecharMenu()"></div>
 
-  <main class="section">
-    <div class="container">
-      <h1>Galeria de Estilo</h1>
-      <div id="galeria-contador" class="small"></div>
-      <div id="filtros" class="tabs"></div>
-      <div id="galeria-grid" class="gallery-grid"></div>
-    </div>
+  <main>
+    <section class="galeria-section">
+      <div class="galeria-header">
+        <div class="section-tag">Nossos Trabalhos</div>
+        <h1 class="section-title">Galeria</h1>
+        <p class="galeria-desc">Confira alguns dos nossos trabalhos e se inspire para o seu proximo visual.</p>
+      </div>
+
+      <!-- Filtros com contador -->
+      <div class="filtros-wrap" id="filtros-galeria">
+        <button class="btn-filtro ativo" onclick="filtrar('todos', this)">Todos <span class="filtro-count" id="count-todos"></span></button>
+        <button class="btn-filtro" onclick="filtrar('cortes', this)">Cortes <span class="filtro-count" id="count-cortes"></span></button>
+        <button class="btn-filtro" onclick="filtrar('barba', this)">Barba <span class="filtro-count" id="count-barba"></span></button>
+        <button class="btn-filtro" onclick="filtrar('degrade', this)">Degrade <span class="filtro-count" id="count-degrade"></span></button>
+        <button class="btn-filtro" onclick="filtrar('eventos', this)">Eventos <span class="filtro-count" id="count-eventos"></span></button>
+        <button class="btn-filtro" onclick="filtrar('galeria', this)">Outros <span class="filtro-count" id="count-galeria"></span></button>
+      </div>
+
+      <!-- Grid masonry simulado -->
+      <div class="galeria-grid" id="galeria-grid"></div>
+
+      <!-- Estado vazio -->
+      <div id="galeria-vazia" style="display:none" class="galeria-vazia-msg">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--dark-goldenrod)">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21 15 16 10 5 21"/>
+        </svg>
+        <p>Nenhuma foto encontrada nesta categoria.</p>
+      </div>
+
+      <!-- Lightbox -->
+      <div class="lightbox" id="lightbox" onclick="fecharLightbox(event)">
+        <button class="lightbox-fechar" onclick="fecharLightbox()">X</button>
+        <button class="lightbox-nav prev" onclick="navLightbox(-1,event)">&#8249;</button>
+        <button class="lightbox-nav next" onclick="navLightbox(1,event)">&#8250;</button>
+        <div class="lightbox-inner">
+          <img id="lightbox-img" src="" alt="">
+          <div class="lightbox-info">
+            <span id="lightbox-titulo"></span>
+            <span id="lightbox-categoria" class="badge-gold"></span>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <div id="lightbox" class="lightbox" aria-hidden="true">
-    <button type="button" class="lightbox-close" data-lightbox-close aria-label="Fechar imagem">&times;</button>
-    <button type="button" class="lightbox-nav lightbox-nav--prev" data-lightbox-prev aria-label="Imagem anterior">&#8249;</button>
-    <figure class="lightbox-panel">
-      <img alt="Imagem ampliada">
-      <figcaption class="lightbox-caption"></figcaption>
-    </figure>
-    <button type="button" class="lightbox-nav lightbox-nav--next" data-lightbox-next aria-label="PrÃ³xima imagem">&#8250;</button>
-  </div>
+  <footer><div class="container footer-grid"><div class="footer-brand"><div class="logo-texto" style="display:flex"><span class="logo-alpha">ALPHA</span><span class="logo-barber"><span class="logo-accent">B</span>ARBER</span></div><p class="footer-desc">Tradicao, estilo e qualidade em cada atendimento.</p></div><div class="footer-col"><h4>Navegacao</h4><ul><li><a href="index.html">Home</a></li><li><a href="agendar.html">Agendar</a></li><li><a href="galeria.html">Galeria</a></li><li><a href="localizacao.html">Localizacao</a></li></ul></div><div class="footer-col"><h4>Funcionamento</h4><ul><li>Seg-Sex: 09h-19h</li><li>Sabado: 08h-17h</li><li>Domingo: Fechado</li></ul></div></div><div class="footer-bottom"><span>© 2026 Alpha Barber</span><span>API: Node.js + Express</span></div></footer>
 
-  <script src="js/auth.js"></script>
-  <script src="js/api.js"></script>
-  <script src="js/nav.js"></script>
-  <script src="js/whatsapp.js"></script>
-  <script src="js/galeria.js"></script>
+  <button class="wpp-float" onclick="window.open('https://wa.me/5561983088897','_blank')" title="WhatsApp" aria-label="WhatsApp"><svg viewBox="0 0 24 24" width="28" height="28" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/></svg></button>
+
+  <script src="js/api.js"></script><script src="js/ui.js"></script><script src="js/nav.js"></script><script src="js/loader.js"></script><script src="js/galeria.js"></script>
 </body>
 </html>
-

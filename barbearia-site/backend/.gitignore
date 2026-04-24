@@ -1,0 +1,24 @@
+# ================================================
+# Alpha Barber - .gitignore
+# Funcao: ignorar artefatos de ambiente e dados locais.
+# ================================================
+
+# Node
+node_modules/
+npm-debug.log*
+.npm
+
+# Dados e uploads (nao versionar)
+data/*.json
+uploads/*
+!uploads/.gitkeep
+!data/.gitkeep
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+
+# Ambiente
+.env
+.env.local

@@ -1,113 +1,124 @@
-# Sistema Web - Barbearia
+# Alpha Barber
 
-Projeto full-stack com backend em Spring Boot e frontend em HTML5, CSS3 e JavaScript Vanilla.
-
-## Estrutura
-
-- backend: API REST, autenticacao admin e persistencia em arquivos JSON
-- frontend: paginas publicas, agendamento, galeria, cursos, localizacao e painel admin
+Projeto completo de barbearia com backend em Node.js + Express e frontend em HTML/CSS/JavaScript puro.
 
 ## Requisitos
+- Node.js 18+
+- npm 9+
 
-- Java 17+
-- Maven 3.9+
-- VS Code Live Server (ou qualquer servidor estatico para frontend)
-
-## Windows: se `mvn` nao for reconhecido
-
-Se aparecer o erro "mvn nao e reconhecido", execute no PowerShell:
-
-```powershell
-$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-mvn -v
-```
-
-Se ainda assim nao funcionar, rode usando caminho absoluto do Maven instalado neste projeto de usuario:
-
-```powershell
-& "$env:USERPROFILE\tools\apache-maven-3.9.9\bin\mvn.cmd" -v
-& "$env:USERPROFILE\tools\apache-maven-3.9.9\bin\mvn.cmd" spring-boot:run
-```
-
-## Como executar o backend
-
-1. Entre na pasta do backend:
-
+## Instalacao
 ```bash
-cd barbearia-site/backend
+cd backend
+npm install
 ```
 
-2. Rode o projeto:
-
+## Executar
 ```bash
-mvn spring-boot:run
+npm start
 ```
-
-Alternativa recomendada no Windows (mais estavel neste workspace):
-
+Ou para desenvolvimento:
 ```bash
-mvn -DskipTests package
-java -jar target/backend-1.0.0.jar
+npm run dev
 ```
 
-3. API disponivel em:
+## Acessar
+- API: http://localhost:8080/api/health
+- Frontend: abrir frontend/index.html com Live Server (VS Code), geralmente em http://127.0.0.1:5500
 
-- http://localhost:8080/api
+## Login Admin
+- Usuario: admin
+- Senha: barbearia123
+- URL: frontend/admin/login.html
 
-## Como executar o frontend
+## Token API
+`Authorization: Bearer barberco-admin-2026`
 
-1. Abra a pasta `barbearia-site/frontend` com Live Server ou outro servidor estatico.
-2. Acesse `index.html`.
+## Estrutura de Endpoints
+| Metodo | Endpoint | Auth | Descricao |
+|---|---|---|---|
+| GET | /api/health | Nao | Status da API |
+| POST | /api/admin/login | Nao | Login administrativo |
+| GET | /api/admin/check | Sim | Validar sessao admin |
+| GET | /api/servicos | Nao | Listar servicos ativos |
+| GET | /api/admin/servicos | Sim | Listar todos os servicos |
+| POST | /api/admin/servicos | Sim | Criar servico |
+| PUT | /api/admin/servicos/:id | Sim | Atualizar servico |
+| DELETE | /api/admin/servicos/:id | Sim | Remover servico |
+| GET | /api/barbeiros | Nao | Listar barbeiros ativos |
+| GET | /api/admin/barbeiros | Sim | Listar barbeiros admin |
+| POST | /api/admin/barbeiros | Sim | Criar barbeiro com foto |
+| PUT | /api/admin/barbeiros/:id | Sim | Atualizar barbeiro |
+| PATCH | /api/admin/barbeiros/:id/pausar | Sim | Pausar ou reativar barbeiro |
+| DELETE | /api/admin/barbeiros/:id | Sim | Remover barbeiro |
+| GET | /api/horarios | Nao | Ler configuracao de horarios |
+| POST | /api/admin/horarios | Sim | Salvar configuracao de horarios |
+| GET | /api/horarios/disponiveis?data=YYYY-MM-DD&servico=... | Nao | Horarios livres |
+| POST | /api/agendamentos | Nao | Criar agendamento |
+| GET | /api/agendamentos | Nao | Listar agendamentos |
+| GET | /api/admin/agendamentos | Sim | Listar agendamentos admin |
+| PUT | /api/admin/agendamentos/:id/cancelar | Sim | Cancelar agendamento |
+| GET | /api/admin/imprevistos | Sim | Listar bloqueios |
+| POST | /api/admin/imprevistos | Sim | Criar bloqueio |
+| DELETE | /api/admin/imprevistos/:id | Sim | Remover bloqueio |
+| GET | /api/galeria | Nao | Listar midias |
+| POST | /api/admin/upload | Sim | Upload de foto/video |
+| POST | /api/midias/video | Sim | Cadastrar video por URL |
+| DELETE | /api/admin/galeria/:nomeArquivo | Sim | Excluir midia |
+| GET | /api/uploads/:arquivo | Nao | Servir arquivo enviado |
 
-## Inicializacao automatica no VS Code (API + Frontend)
+## Dados JSON
+Os dados ficam em `backend/data`.
 
-Para subir tudo de uma vez no VS Code:
+### servicos.json
+```json
+[
+  { "id": 1, "nome": "Corte Masculino", "preco": 35, "duracaoMinutos": 30, "ativo": true }
+]
+```
 
-1. Abra `Terminal > Run Task...`
-2. Execute a task `Barbearia: Tudo (API + Frontend)`
-3. Abra `http://localhost:5500/index.html`
+### barbeiros.json
+```json
+[
+  { "id": 1, "nome": "Adriel", "especialidade": "Degrade", "whatsapp": "5561999999999", "instagram": "@adriel", "ativo": true, "pausado": false, "motivoPausa": "", "criadoEm": "2026-04-24", "fotoArquivo": "barbeiro-...jpg", "fotoUrl": "http://localhost:8080/api/uploads/..." }
+]
+```
 
-Tasks disponiveis:
+### horarios.json
+```json
+{
+  "configuracao": {
+    "intervaloPadrao": 30,
+    "diasSemana": {
+      "segunda": { "inicio": "09:00", "fim": "18:00", "ativo": true }
+    }
+  }
+}
+```
 
-- `Barbearia: Backend API` (sobe API Java)
-- `Barbearia: Frontend estatico` (sobe servidor estatico)
-- `Barbearia: Tudo (API + Frontend)` (sobe ambos)
-- `Barbearia: Abrir frontend` (abre o navegador em localhost:5500)
+### agendamentos.json
+```json
+[
+  { "id": 1, "nomeCliente": "Joao", "telefone": "6199...", "servico": "Corte", "barbeiro": "Adriel", "data": "2026-04-24", "horario": "10:30", "status": "confirmado" }
+]
+```
 
-Observacao: o clique direto no botao "Go Live" do Live Server nao dispara o backend Java automaticamente. Para comportamento de "um clique", use a task `Barbearia: Tudo (API + Frontend)`.
+### imprevistos.json
+```json
+[
+  { "id": 1, "data": "2026-04-30", "periodo": "manha", "motivo": "Compromisso" }
+]
+```
 
-## Credenciais do admin
+### midia-metadata.json
+```json
+[
+  { "id": "uuid", "nomeArquivo": "upload-...jpg", "tipo": "image/jpeg", "categoria": "cortes", "titulo": "Corte", "url": "http://localhost:8080/api/uploads/...", "tamanhoKb": 321, "dataUpload": "2026-04-24" }
+]
+```
 
-- Usuario: `admin`
-- Senha: `123456`
-
-## Fluxo principal
-
-- Site publico consome:
-  - `GET /api/servicos`
-  - `GET /api/agendamentos/disponibilidade?data=YYYY-MM-DD`
-  - `POST /api/agendamentos`
-  - `GET /api/midias`
-  - `GET /api/cursos`
-
-- Painel admin usa token via `localStorage`:
-  - `POST /api/admin/login`
-  - CRUD de servicos, horarios, imprevistos, cursos e agendamentos
-  - upload de imagem em `POST /api/midias/upload`
-
-## Persistencia JSON
-
-Arquivos em `backend/src/main/resources/data`:
-
-- `servicos.json`
-- `horarios.json`
-- `agendamentos.json`
-- `imprevistos.json`
-- `cursos.json`
-- `midias.json`
-
-## Observacoes
-
-- O backend esta configurado com CORS para frontend local.
-- Alteracoes no painel sao refletidas imediatamente nas paginas publicas.
-- Em producao, troque credenciais admin no `application.properties`.
+## Tecnologias
+- Backend: Node.js + Express
+- Frontend: HTML5 + CSS3 + JavaScript ES6+
+- Dados: Arquivos JSON locais
+- Upload: Multer
+- Fontes: Google Fonts (Playfair Display + Barlow)

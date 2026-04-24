@@ -3,24 +3,30 @@ $ErrorActionPreference = 'Stop'
 $workspaceRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $backendPath = Join-Path $workspaceRoot 'barbearia-site\backend'
 
-$mvnCmd = (Get-Command mvn -ErrorAction SilentlyContinue).Source
-if (-not $mvnCmd) {
-    $mvnCmd = Join-Path $env:USERPROFILE 'tools\apache-maven-3.9.9\bin\mvn.cmd'
+if (-not (Test-Path $backendPath)) {
+    throw "Pasta do backend nao encontrada: $backendPath"
 }
 
-if (-not (Test-Path $mvnCmd)) {
-    throw 'Maven nao encontrado. Instale o Maven ou ajuste o caminho no script.'
+$nodeCmd = Get-Command node -ErrorAction SilentlyContinue
+$npmCmd = Get-Command npm -ErrorAction SilentlyContinue
+
+if (-not $nodeCmd) {
+    throw 'Node.js nao encontrado no PATH. Instale Node.js 18+ e tente novamente.'
 }
 
-$env:JAVA_HOME = [Environment]::GetEnvironmentVariable('JAVA_HOME', 'User')
-if ($env:JAVA_HOME) {
-    $env:Path = "$env:Path;$env:JAVA_HOME\bin"
+if (-not $npmCmd) {
+    throw 'npm nao encontrado no PATH. Reinstale o Node.js e tente novamente.'
 }
 
 Push-Location $backendPath
 try {
-    & $mvnCmd -DskipTests package
-    java -jar target\backend-1.0.0.jar
+    if (-not (Test-Path (Join-Path $backendPath 'node_modules'))) {
+        Write-Host 'Dependencias nao encontradas. Executando npm install...'
+        npm install
+    }
+
+    Write-Host 'Iniciando API com npm start...'
+    npm start
 }
 finally {
     Pop-Location

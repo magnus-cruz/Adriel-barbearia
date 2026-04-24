@@ -43,10 +43,6 @@ http://localhost:8080/api/health
 | GET | /api/admin/imprevistos | Sim | Lista bloqueios/imprevistos |
 | POST | /api/admin/imprevistos | Sim | Cria bloqueio |
 | DELETE | /api/admin/imprevistos/:id | Sim | Remove bloqueio |
-| GET | /api/cursos | Não | Lista cursos |
-| POST | /api/admin/cursos | Sim | Cadastra curso |
-| PUT | /api/admin/cursos/:id | Sim | Atualiza curso |
-| DELETE | /api/admin/cursos/:id | Sim | Exclui curso |
 | GET | /api/galeria | Não | Lista metadados da galeria |
 | POST | /api/admin/upload | Sim | Upload de mídia (multipart/form-data) |
 | GET | /api/uploads/:filename | Não | Retorna arquivo enviado |
@@ -110,22 +106,6 @@ Todos os arquivos ficam em `data/`.
     "data": "2026-04-24",
     "periodo": "manha",
     "motivo": "Evento externo"
-  }
-]
-```
-
-### cursos.json
-
-```json
-[
-  {
-    "id": 1,
-    "titulo": "Curso de Fade",
-    "preco": 197.9,
-    "cargaHoraria": "8h",
-    "descricao": "Curso completo",
-    "imagemUrl": "https://...",
-    "linkCompra": "https://..."
   }
 ]
 ```

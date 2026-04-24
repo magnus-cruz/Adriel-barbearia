@@ -62,7 +62,6 @@ app.use('/api', require('./routes/servicos'));
 app.use('/api', require('./routes/horarios'));
 app.use('/api', require('./routes/agendamentos'));
 app.use('/api/admin', require('./routes/imprevistos'));
-app.use('/api', require('./routes/cursos'));
 app.use('/api', require('./routes/midia'));
 app.use('/api', require('./routes/barbeiros'));
 

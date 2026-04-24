@@ -1,888 +1,500 @@
-﻿function requireAuth() {
-  if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
-    window.location.href = "login.html";
-  }
-}
+/* ================================================
+   Alpha Barber - admin.js
+   Funcao: gerenciar painel admin (abas, badges e CRUDs).
+   ================================================ */
 
-async function validarSessaoAdmin() {
-  if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
-    alert("Sua sessao expirou. Faca login novamente.");
-    window.location.href = "login.html";
-    throw new Error("Sessao expirada");
-  }
-}
+'use strict';
 
-let horariosConfigCache = null;
-let selectedUploadFile = null;
-let agendamentosCache = [];
-window.arquivoSelecionado = null;
+let cacheAgendamentos = [];
+let cacheServicos = [];
+let cacheBarbeiros = [];
+let cacheMidias = [];
+let cacheImprevistos = [];
 
-/* ============================================================
-   METADADOS E CONTROLE DE ABAS (sidebar)
-   ============================================================ */
-const abas = {
-  servicos: {
-    titulo: "Servicos e Precos",
-    desc:   "Gerencie os servicos, precos e duracao.",
-    fn:     () => carregarServicos()
-  },
-  barbeiros: {
-    titulo: "Barbeiros",
-    desc:   "Adicione e remova barbeiros da equipe.",
-    fn:     () => carregarBarbeiros()
-  },
-  horarios: {
-    titulo: "Horarios Disponiveis",
-    desc:   "Configure os horarios de atendimento por dia.",
-    fn:     () => carregarHorarios()
-  },
-  imprevistos: {
-    titulo: "Imprevistos / Bloqueios",
-    desc:   "Bloqueie datas e periodos especificos.",
-    fn:     () => carregarImprevistos()
-  },
-  galeria: {
-    titulo: "Galeria de Fotos",
-    desc:   "Faca upload e gerencie as fotos do estabelecimento.",
-    fn:     () => carregarMidiasAdmin()
-  },
-  cursos: {
-    titulo: "Cursos Profissionais",
-    desc:   "Gerencie os cursos disponiveis para venda.",
-    fn:     () => carregarCursos()
-  },
-  agendamentos: {
-    titulo: "Agendamentos",
-    desc:   "Visualize e gerencie todos os agendamentos.",
-    fn:     () => carregarAgendamentos()
-  }
+const ABAS = {
+  servicos: { titulo: 'Servicos e Precos', desc: 'Gerencie os servicos, precos e duracao.', carregar: carregarServicos },
+  barbeiros: { titulo: 'Barbeiros', desc: 'Cadastre barbeiros e fotos da equipe.', carregar: carregarBarbeiros },
+  horarios: { titulo: 'Horarios Disponiveis', desc: 'Defina horario por dia da semana.', carregar: carregarHorarios },
+  imprevistos: { titulo: 'Imprevistos / Bloqueios', desc: 'Bloqueie datas e periodos.', carregar: carregarImprevistos },
+  galeria: { titulo: 'Galeria', desc: 'Envie e gerencie fotos e videos.', carregar: carregarMidias },
+  agendamentos: { titulo: 'Agendamentos', desc: 'Acompanhe e cancele reservas.', carregar: carregarAgendamentos }
 };
 
-function switchTab(btn, chave) {
-  document.querySelectorAll(".sidebar-item")
-    .forEach((b) => b.classList.remove("active"));
-  document.querySelectorAll(".tab-content")
-    .forEach((c) => c.classList.remove("ativo"));
-
-  btn.classList.add("active");
-  const tab = document.getElementById("tab-" + chave);
-  if (tab) tab.classList.add("ativo");
-
-  const meta = abas[chave];
-  if (meta) {
-    document.getElementById("breadcrumb-atual").textContent = meta.titulo;
-    document.getElementById("secao-titulo").textContent = meta.titulo;
-    document.getElementById("secao-desc").textContent = meta.desc;
-    document.querySelector(".admin-main")
-      .scrollTo({ top: 0, behavior: "smooth" });
-    meta.fn();
+function setBadge(id, valor) {
+  const badge = document.getElementById(id);
+  if (!badge) return;
+  if (valor > 0) {
+    badge.textContent = valor > 99 ? '99+' : String(valor);
+    badge.classList.add('visivel');
+  } else {
+    badge.classList.remove('visivel');
+    badge.textContent = '';
   }
 }
 
-/* ============================================================
-   BADGES (contadores da sidebar)
-   ============================================================ */
 async function atualizarBadges() {
   try {
-    const [servicos, barbeiros, imprevistos, galeria, cursos, agendamentos] =
-      await Promise.all([
-        fetch("http://localhost:8080/api/servicos?_=" + Date.now())
-          .then((r) => r.json()),
-        fetch("http://localhost:8080/api/barbeiros?_=" + Date.now())
-          .then((r) => r.json()),
-        fetch("http://localhost:8080/api/admin/imprevistos?_=" + Date.now(), {
-          headers: { Authorization: "Bearer " + getToken() }
-        }).then((r) => r.json()),
-        fetch("http://localhost:8080/api/galeria?_=" + Date.now())
-          .then((r) => r.json()),
-        fetch("http://localhost:8080/api/cursos?_=" + Date.now())
-          .then((r) => r.json()),
-        fetch("http://localhost:8080/api/agendamentos?_=" + Date.now() + "&status=confirmado")
-          .then((r) => r.json())
-      ]);
+    const [servicos, barbeiros, imprevistos, midias, agendamentos] = await Promise.all([
+      API.servicos(),
+      API.barbeiros(),
+      API.adminImprevistos.listar(),
+      API.galeria(),
+      API.agendar ? API.apiGet('/api/agendamentos?status=confirmado') : []
+    ]);
 
-    setBadge("badge-servicos",     servicos.length);
-    setBadge("badge-barbeiros",    barbeiros.length);
-    setBadge("badge-imprevistos",  imprevistos.length);
-    setBadge("badge-galeria",      galeria.length);
-    setBadge("badge-cursos",       cursos.length);
-    setBadge("badge-agendamentos", agendamentos.length);
-
-  } catch (e) {
-    console.error("Badges:", e.message);
+    setBadge('badge-servicos', servicos.length);
+    setBadge('badge-barbeiros', barbeiros.length);
+    setBadge('badge-imprevistos', imprevistos.length);
+    setBadge('badge-galeria', midias.length);
+    setBadge('badge-agendamentos', agendamentos.length || 0);
+  } catch (erro) {
+    console.error('Falha ao atualizar badges:', erro.message);
   }
 }
 
-function setBadge(id, valor) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (valor > 0) {
-    el.textContent = valor > 99 ? "99+" : valor;
-    el.classList.add("visivel");
-  } else {
-    el.classList.remove("visivel");
+function switchTab(botao, aba) {
+  document.querySelectorAll('.sidebar-item').forEach((item) => item.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach((item) => item.classList.remove('ativo'));
+
+  botao.classList.add('active');
+  document.getElementById(`tab-${aba}`)?.classList.add('ativo');
+
+  const meta = ABAS[aba];
+  if (meta) {
+    document.getElementById('breadcrumb-atual').textContent = meta.titulo;
+    document.getElementById('secao-titulo').textContent = meta.titulo;
+    document.getElementById('secao-desc').textContent = meta.desc;
+    meta.carregar().catch((erro) => mostrarErro(erro.message));
   }
 }
 
-/* ============================================================
-   TOASTS E UTILITARIOS
-   ============================================================ */
-function mostrarSucesso(mensagem) {
-  mostrarToast(mensagem, "sucesso");
-}
-
-function mostrarErro(mensagem) {
-  mostrarToast(mensagem, "erro");
-}
-
-function mostrarToast(msg, tipo) {
-  const cores = {
-    sucesso: {
-      bg: "rgba(23,23,20,0.97)",
-      borda: "var(--dark-goldenrod)",
-      texto: "var(--pale-oak)"
-    },
-    erro: {
-      bg: "rgba(23,23,20,0.97)",
-      borda: "#e05555",
-      texto: "#e05555"
-    }
-  };
-  const c = cores[tipo] || cores.sucesso;
-
-  const toast = document.createElement("div");
-  toast.style.cssText = `
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    background: ${c.bg};
-    border-left: 3px solid ${c.borda};
-    color: ${c.texto};
-    padding: 0.9rem 1.4rem;
-    border-radius: 4px;
-    font-family: 'Barlow', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 500;
-    z-index: 99998;
-    max-width: 320px;
-    line-height: 1.5;
-    box-shadow: 2px 2px 12px rgba(0,0,0,0.5);
-    animation: slideInToast 0.3s ease;
-  `;
-  toast.textContent = msg;
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.animation = "slideOutToast 0.3s ease forwards";
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
-}
-
-function renderEstadoTabela(tbody, colunas, mensagem, cor = "rgba(253,240,213,.3)") {
+function renderEstadoTabela(tbody, colunas, msg) {
   if (!tbody) return;
-  tbody.innerHTML = `
+  tbody.innerHTML = `<tr><td colspan="${colunas}" style="text-align:center;color:var(--pale-oak-dim);padding:1.3rem">${msg}</td></tr>`;
+}
+
+async function carregarServicos() {
+  const tbody = document.getElementById('tbody-servicos');
+  if (!tbody) return;
+
+  cacheServicos = await API.adminServicos.listar();
+  if (!cacheServicos.length) {
+    renderEstadoTabela(tbody, 4, 'Nenhum servico cadastrado.');
+    return;
+  }
+
+  tbody.innerHTML = cacheServicos.map((s) => `
     <tr>
-      <td colspan="${colunas}" style="text-align:center;color:${cor};padding:1.5rem">
-        ${mensagem}
+      <td>${s.nome}</td>
+      <td>${API.formatarMoeda(s.preco)}</td>
+      <td>${s.duracaoMinutos} min</td>
+      <td class="acoes-cell">
+        <button type="button" class="btn-acao btn-editar" onclick='editarServico(${JSON.stringify(s)})'>Editar</button>
+        <button type="button" class="btn-acao btn-excluir-tabela" onclick="excluirServico(${s.id})">Excluir</button>
       </td>
-    </tr>`;
+    </tr>
+  `).join('');
 }
 
-function atualizarEstadoBotaoUpload(ativo) {
-  const botao = document.getElementById("btn-enviar");
-  if (!botao) return;
-  botao.disabled = !ativo;
-  botao.style.opacity = ativo ? "1" : "0.4";
-  botao.style.cursor = ativo ? "pointer" : "not-allowed";
+function editarServico(servico) {
+  document.getElementById('servico-id').value = servico.id;
+  document.getElementById('nome-servico').value = servico.nome;
+  document.getElementById('preco-servico').value = servico.preco;
+  document.getElementById('duracao-servico').value = servico.duracaoMinutos;
+  document.getElementById('ativo-servico').checked = !!servico.ativo;
 }
 
-function atualizarProgresso(pct) {
-  const wrap = document.getElementById("progress-wrap");
-  const fill = document.getElementById("progress-fill");
-  const label = document.getElementById("progress-pct");
-
-  if (wrap) wrap.style.display = "block";
-  if (fill) fill.style.width = `${pct}%`;
-  if (label) label.textContent = `${pct}%`;
+async function excluirServico(id) {
+  abrirModalConfirmar('Excluir servico', 'Deseja remover este servico?', async () => {
+    await API.adminServicos.excluir(id);
+    mostrarSucesso('Servico removido.');
+    await carregarServicos();
+    await atualizarBadges();
+  });
 }
 
-function resetarProgresso() {
-  atualizarProgresso(0);
-  const wrap = document.getElementById("progress-wrap");
-  if (wrap) wrap.style.display = "none";
-}
-
-function limparPreviewUpload() {
-  selectedUploadFile = null;
-  window.arquivoSelecionado = null;
-
-  const input = document.getElementById("file-upload");
-  const previewWrap = document.getElementById("preview-wrap");
-  const previewImg = document.getElementById("preview-img");
-  const previewNome = document.getElementById("preview-nome");
-  const dropZone = document.getElementById("drop-zone");
-  const textoPrincipal = dropZone?.querySelector(".text span");
-  const botao = document.getElementById("btn-enviar");
-
-  if (input) input.value = "";
-  if (previewWrap) previewWrap.style.display = "none";
-  if (previewImg) previewImg.src = "";
-  if (previewNome) previewNome.textContent = "";
-  if (textoPrincipal) textoPrincipal.textContent = "Clique ou arraste a imagem aqui";
-  if (dropZone) {
-    dropZone.classList.remove("drag-over");
-    dropZone.style.borderColor = "var(--taupe)";
-  }
-  if (botao) {
-    botao.disabled = true;
-    botao.style.opacity = "0.4";
-    dropZone.style.borderColor = "var(--taupe)";
-  }
-  if (botao) {
-    botao.disabled = true;
-    botao.style.opacity = "0.4";
-    botao.style.cursor = "not-allowed";
-  }
-}
-
-function processarArquivo(arquivo) {
-  const dropZone = document.getElementById("drop-zone");
-  const previewWrap = document.getElementById("preview-wrap");
-  const previewImg = document.getElementById("preview-img");
-  const previewNome = document.getElementById("preview-nome");
-  const textoPrincipal = dropZone?.querySelector(".text span");
-
-  if (!arquivo) {
-    limparPreviewUpload();
-    return;
-  }
-
-  const tiposPermitidos = ["image/jpeg", "image/png", "image/webp", "video/mp4"];
-  if (!tiposPermitidos.includes(arquivo.type)) {
-    mostrarErro("Tipo nao permitido. Use JPG, PNG, WEBP ou MP4.");
-    limparPreviewUpload();
-    return;
-  }
-
-  if (arquivo.size > 10 * 1024 * 1024) {
-    mostrarErro("Arquivo muito grande. Maximo de 10MB.");
-    limparPreviewUpload();
-    return;
-  }
-
-  selectedUploadFile = arquivo;
-  window.arquivoSelecionado = arquivo;
-
-  const leitor = new FileReader();
-  leitor.onload = (event) => {
-    if (previewImg) previewImg.src = event.target.result;
-    if (previewNome) {
-      previewNome.textContent = `${arquivo.name} - ${(arquivo.size / 1024).toFixed(0)} KB`;
-    }
-    if (previewWrap) previewWrap.style.display = "block";
-    if (textoPrincipal) textoPrincipal.textContent = `✓ ${arquivo.name}`;
-    if (dropZone) dropZone.style.borderColor = "var(--dark-goldenrod)";
-    atualizarEstadoBotaoUpload(true);
+async function salvarServico(event) {
+  event.preventDefault();
+  const id = document.getElementById('servico-id').value;
+  const payload = {
+    nome: document.getElementById('nome-servico').value.trim(),
+    preco: Number(document.getElementById('preco-servico').value),
+    duracaoMinutos: Number(document.getElementById('duracao-servico').value),
+    ativo: document.getElementById('ativo-servico').checked
   };
-  leitor.readAsDataURL(arquivo);
+
+  if (id) await API.adminServicos.atualizar(id, payload);
+  else await API.adminServicos.criar(payload);
+
+  event.target.reset();
+  document.getElementById('servico-id').value = '';
+  mostrarSucesso('Servico salvo com sucesso.');
+  await carregarServicos();
+  await atualizarBadges();
 }
 
-function configurarUploadImagem() {
-  const dropZone = document.getElementById("drop-zone");
-  const input = document.getElementById("file-upload");
-
-  if (!dropZone || !input) return;
-
-  limparPreviewUpload();
-
-  dropZone.addEventListener("dragover", (event) => {
-    event.preventDefault();
-    dropZone.classList.add("drag-over");
-  });
-
-  dropZone.addEventListener("dragleave", () => {
-    dropZone.classList.remove("drag-over");
-  });
-
-  dropZone.addEventListener("drop", (event) => {
-    event.preventDefault();
-    dropZone.classList.remove("drag-over");
-    const arquivo = event.dataTransfer?.files?.[0];
-    if (arquivo) processarArquivo(arquivo);
-  });
-
-  input.addEventListener("change", () => {
-    const arquivo = input.files && input.files[0];
-    if (arquivo) processarArquivo(arquivo);
-    else limparPreviewUpload();
-  });
-}
-
-/* ============================================================
-   MODAIS
-   ============================================================ */
-function abrirModalExcluir(nomeArquivo, cardElement) {
-  const backdrop = document.createElement("div");
-  backdrop.className = "modal-backdrop";
-  backdrop.innerHTML = `
-    <div class="modal-card" id="modal-card">
-      <div class="modal-titulo">Excluir imagem</div>
-      <div class="modal-mensagem">
-        Tem certeza que deseja excluir esta imagem?<br>
-        <strong style="color:var(--pale-oak)">${nomeArquivo}</strong><br>
-        Esta acao nao pode ser desfeita.
-      </div>
-      <div class="modal-acoes">
-        <button class="btn-modal-cancelar" id="btn-cancelar-modal" type="button">Cancelar</button>
-        <button class="btn-modal-excluir" id="btn-confirmar-excluir" type="button">Excluir</button>
-      </div>
-  `;
-
-  document.body.appendChild(backdrop);
-  document.body.style.overflow = "hidden";
-
-  function fechar() {
-    document.removeEventListener("keydown", escHandler);
-    backdrop.remove();
-    document.body.style.overflow = "";
-  }
-
-  function escHandler(event) {
-    if (event.key === "Escape") fechar();
-  }
-
-  backdrop.addEventListener("click", (event) => {
-    if (event.target === backdrop) fechar();
-  });
-
-  backdrop.querySelector("#btn-cancelar-modal")?.addEventListener("click", fechar);
-  backdrop.querySelector("#btn-confirmar-excluir")?.addEventListener("click", () => {
-    fechar();
-    excluirImagem(nomeArquivo, cardElement);
-  });
-
-  document.addEventListener("keydown", escHandler);
-}
-
-function abrirModalConfirmar(titulo, mensagem, onConfirmar) {
-  const backdrop = document.createElement("div");
-  backdrop.className = "modal-backdrop";
-  backdrop.innerHTML = `
-    <div class="modal-card" id="modal-card">
-      <div class="modal-titulo">${titulo}</div>
-      <div class="modal-mensagem">${mensagem}</div>
-      <div class="modal-acoes">
-        <button class="btn-modal-cancelar" id="btn-cancelar-modal" type="button">Cancelar</button>
-        <button class="btn-modal-excluir" id="btn-confirmar-modal" type="button">Confirmar</button>
-      </div>
-  `;
-
-  document.body.appendChild(backdrop);
-  document.body.style.overflow = "hidden";
-
-  function fechar() {
-    document.removeEventListener("keydown", escHandler);
-    backdrop.remove();
-    document.body.style.overflow = "";
-  }
-
-  function escHandler(event) {
-    if (event.key === "Escape") fechar();
-  }
-
-  backdrop.addEventListener("click", (event) => {
-    if (event.target === backdrop) fechar();
-  });
-
-  backdrop.querySelector("#btn-cancelar-modal")?.addEventListener("click", fechar);
-  backdrop.querySelector("#btn-confirmar-modal")?.addEventListener("click", async () => {
-    fechar();
-    if (typeof onConfirmar === "function") await onConfirmar();
-  });
-
-  document.addEventListener("keydown", escHandler);
-}
-
-/* ============================================================
-   CRUD — BARBEIROS
-   ============================================================ */
 async function carregarBarbeiros() {
-  const tbody = document.getElementById("tbody-barbeiros");
+  const tbody = document.getElementById('tbody-barbeiros');
   if (!tbody) return;
 
-  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--pale-oak-dim);padding:2rem">Carregando...</td></tr>';
-
-  try {
-    const res = await fetch("http://localhost:8080/api/barbeiros?_=" + Date.now(), {
-      headers: { "Cache-Control": "no-cache" }
-    });
-    const lista = await res.json();
-
-    if (!Array.isArray(lista) || !lista.length) {
-      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--pale-oak-dim);padding:2rem">Nenhum barbeiro cadastrado.</td></tr>';
-      return;
-    }
-
-    tbody.innerHTML = lista.map((b) => `
-      <tr id="barbeiro-${b.id}">
-        <td>
-          <img src="${b.fotoUrl || ""}" alt="${b.nome}" onerror="this.src=''" style="width:40px;height:40px;object-fit:cover;border-radius:50%;border:1px solid var(--taupe-border)">
-        </td>
-        <td>${b.nome}</td>
-        <td>${b.especialidade || "-"}</td>
-        <td style="color:var(--dark-goldenrod)">${b.instagram || "-"}</td>
-        <td>
-          <span style="font-size:.78rem;color:${b.ativo ? "#4caf50" : "var(--pale-oak-dim)"}">
-            ${b.ativo ? "● Ativo" : "● Inativo"}
-          </span>
-        </td>
-        <td class="acoes-cell">
-          <button class="btn-acao btn-excluir-tabela" onclick="removerBarbeiro(${b.id}, '${String(b.nome).replace(/'/g, "\\'")}')">Remover</button>
-        </td>
-      </tr>
-    `).join("");
-  } catch (e) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#e05555;padding:2rem">Erro: ${e.message}</td></tr>`;
+  cacheBarbeiros = await API.adminBarbeiros.listar();
+  if (!cacheBarbeiros.length) {
+    renderEstadoTabela(tbody, 6, 'Nenhum barbeiro cadastrado.');
+    return;
   }
+
+  tbody.innerHTML = cacheBarbeiros.map((b) => `
+    <tr id="barbeiro-${b.id}" style="${b.pausado ? 'opacity:.6;background:rgba(139,0,0,.05)' : ''}">
+      <td><img src="${b.fotoUrl || ''}" alt="${b.nome}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid ${b.pausado ? '#e05555' : 'var(--dark-goldenrod)'}"></td>
+      <td>
+        ${b.nome}
+        ${b.pausado ? `<span style="display:block;font-size:.65rem;color:#e05555;margin-top:2px">Pausado: ${b.motivoPausa || 'Indisponivel'}</span>` : ''}
+      </td>
+      <td>${b.especialidade || '-'}</td>
+      <td>
+        ${b.whatsapp ? `<a href="https://wa.me/55${b.whatsapp}" target="_blank" style="color:var(--dark-goldenrod);font-size:.8rem;text-decoration:none">${b.whatsapp}</a>` : '-'}
+      </td>
+      <td>
+        <span style="font-size:.78rem;color:${b.pausado ? '#e05555' : b.ativo ? '#4caf50' : 'var(--pale-oak-dim)'}">
+          ${b.pausado ? 'Pausado' : b.ativo ? 'Ativo' : 'Inativo'}
+        </span>
+      </td>
+      <td class="acoes-cell">
+        <button class="btn-acao ${b.pausado ? 'btn-editar' : 'btn-excluir-tabela'}" onclick='togglePausaBarbeiro(${b.id}, ${JSON.stringify(b.nome || '')}, ${!!b.pausado})' style="${b.pausado ? 'color:var(--dark-goldenrod);border-color:var(--dark-goldenrod)' : ''}" type="button">${b.pausado ? 'Reativar' : 'Pausar'}</button>
+        <button type="button" class="btn-acao btn-excluir-tabela" onclick="removerBarbeiro(${b.id})">Remover</button>
+      </td>
+    </tr>
+  `).join('');
 }
 
 async function salvarBarbeiro() {
-  const nome = document.getElementById("nome-barbeiro")?.value.trim() || "";
-  const espec = document.getElementById("espec-barbeiro")?.value.trim() || "";
-  const insta = document.getElementById("insta-barbeiro")?.value.trim() || "";
-  const fotoEl = document.getElementById("foto-barbeiro");
-  const btn = document.getElementById("btn-salvar-barbeiro");
+  const nome = document.getElementById('nome-barbeiro').value.trim();
+  const wpp = document.getElementById('wpp-barbeiro').value.trim();
 
   if (!nome) {
-    mostrarErro("Nome do barbeiro e obrigatorio.");
+    mostrarErro('Nome do barbeiro e obrigatorio.');
+    return;
+  }
+
+  /* Validar WhatsApp antes de enviar */
+  if (!wpp || !/^\d{10,11}$/.test(wpp)) {
+    mostrarErro('Informe o WhatsApp com DDD (ex: 61999999999)');
     return;
   }
 
   const formData = new FormData();
-  formData.append("nome", nome);
-  formData.append("especialidade", espec);
-  formData.append("instagram", insta);
-  if (fotoEl?.files?.[0]) formData.append("foto", fotoEl.files[0]);
+  formData.append('nome', nome);
+  formData.append('especialidade', document.getElementById('espec-barbeiro').value.trim());
+  formData.append('whatsapp', wpp);
+  formData.append('instagram', document.getElementById('insta-barbeiro').value.trim());
 
-  if (btn) {
-    btn.textContent = "Salvando...";
-    btn.disabled = true;
+  const foto = document.getElementById('foto-barbeiro').files?.[0];
+  if (foto) formData.append('foto', foto);
+
+  await API.adminBarbeiros.salvarComFoto(formData);
+  mostrarSucesso('Barbeiro salvo com sucesso.');
+  document.getElementById('nome-barbeiro').value = '';
+  document.getElementById('espec-barbeiro').value = '';
+  document.getElementById('wpp-barbeiro').value = '';
+  document.getElementById('insta-barbeiro').value = '';
+  document.getElementById('foto-barbeiro').value = '';
+  await carregarBarbeiros();
+  await atualizarBadges();
+}
+
+function togglePausaBarbeiro(id, nome, estaPausado) {
+  if (!estaPausado) {
+    /* Pedir motivo da pausa */
+    const motivo = prompt(`Motivo da pausa para ${nome} (ex: Ferias, Doenca, Folga):`, 'Indisponivel');
+    if (motivo === null) return;
+    executarPausa(id, true, motivo);
+  } else {
+    abrirModalConfirmar(
+      'Reativar Barbeiro',
+      `Reativar <strong>${nome}</strong>?<br>Ele voltara a aparecer no agendamento.`,
+      () => executarPausa(id, false, '')
+    );
   }
+}
 
+async function executarPausa(id, pausado, motivo) {
   try {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "http://localhost:8080/api/admin/barbeiros");
-    xhr.setRequestHeader("Authorization", "Bearer " + getToken());
-
-    xhr.onload = async () => {
-      if (btn) {
-        btn.textContent = "Adicionar Barbeiro";
-        btn.disabled = false;
-      }
-      let resp = {};
-      try { resp = JSON.parse(xhr.responseText || "{}"); } catch (_) { resp = {}; }
-
-      if (xhr.status === 200) {
-        mostrarSucesso("Barbeiro adicionado!");
-        document.getElementById("nome-barbeiro").value = "";
-        document.getElementById("espec-barbeiro").value = "";
-        document.getElementById("insta-barbeiro").value = "";
-        if (fotoEl) fotoEl.value = "";
-        const label = document.getElementById("label-foto-barbeiro");
-        if (label) label.textContent = "Clique para selecionar foto";
-        const preview = document.getElementById("preview-barbeiro");
-        if (preview) preview.style.display = "none";
-        await carregarBarbeiros();
-      } else {
-        mostrarErro(resp.mensagem || "Erro ao salvar.");
-      }
-    };
-
-    xhr.onerror = () => {
-      if (btn) {
-        btn.textContent = "Adicionar Barbeiro";
-        btn.disabled = false;
-      }
-      mostrarErro("Servidor offline.");
-    };
-
-    xhr.send(formData);
+    const data = await API.adminBarbeiros.pausar(id, pausado, motivo);
+    mostrarSucesso(data.mensagem || 'Atualizado com sucesso.');
+    await carregarBarbeiros();
   } catch (e) {
-    if (btn) {
-      btn.textContent = "Adicionar Barbeiro";
-      btn.disabled = false;
-    }
-    mostrarErro("Erro: " + e.message);
+    mostrarErro(`Erro: ${e.message}`);
   }
 }
 
-function removerBarbeiro(id, nome) {
-  abrirModalConfirmar(
-    "Remover Barbeiro",
-    `Tem certeza que deseja remover <strong>${nome}</strong>? Esta acao nao pode ser desfeita.`,
-    async () => {
-      try {
-        const res = await fetch("http://localhost:8080/api/admin/barbeiros/" + id, {
-          method: "DELETE",
-          headers: { Authorization: "Bearer " + getToken() }
-        });
-        const resp = await res.json();
-        if (res.ok) {
-          mostrarSucesso("Barbeiro removido!");
-          await carregarBarbeiros();
-        } else {
-          mostrarErro(resp.mensagem || "Erro ao remover.");
-        }
-      } catch (e) {
-        mostrarErro("Erro: " + e.message);
-      }
-    }
-  );
-}
-
-/* ============================================================
-   CRUD — SERVICOS
-   ============================================================ */
-async function carregarServicos() {
-  const tabela = document.getElementById("tbody-servicos");
-  if (!tabela) return;
-
-  renderEstadoTabela(tabela, 4, "Carregando...");
-
-  try {
-    const servicos = await API.adminServicos.list();
-    if (!Array.isArray(servicos) || !servicos.length) {
-      renderEstadoTabela(tabela, 4, "Nenhum servico cadastrado.");
-      return;
-    }
-
-    tabela.innerHTML = servicos.map((servico) => `
-    <tr>
-      <td>${servico.nome}</td>
-      <td>R$ ${Number(servico.preco || 0).toFixed(2)}</td>
-      <td>${servico.duracaoMinutos} min</td>
-      <td>
-        <div class="acoes-cell">
-          <button class="btn-acao btn-editar" type="button" onclick='editarServico(${JSON.stringify(servico)})'>Editar</button>
-          <button class="btn-acao btn-excluir-tabela" type="button" onclick="excluirServico(${servico.id})">Excluir</button>
-        </div>
-      </td>
-    </tr>
-  `).join("");
-  } catch (erro) {
-    renderEstadoTabela(tabela, 4, `Erro ao carregar. <br><small>${erro?.message || "Falha na API."}</small>`, "#e05555");
-  }
-}
-
-function editarServico(servico) {
-  document.getElementById("servico-id").value = servico.id;
-  document.getElementById("nome-servico").value = servico.nome || "";
-  document.getElementById("preco-servico").value = servico.preco ?? "";
-  document.getElementById("duracao-servico").value = servico.duracaoMinutos ?? "";
-  document.getElementById("ativo-servico").checked = !!servico.ativo;
-}
-
-async function excluirServico(id) {
-  await API.adminServicos.delete(id);
-  await carregarServicos();
-}
-
-async function salvarServico(e) {
-  e.preventDefault();
-  const id = document.getElementById("servico-id").value;
-  const payload = {
-    nome: document.getElementById("nome-servico").value,
-    preco: Number(document.getElementById("preco-servico").value),
-    duracaoMinutos: Number(document.getElementById("duracao-servico").value),
-    ativo: document.getElementById("ativo-servico").checked
-  };
-
-  try {
-    if (id) await API.adminServicos.update(id, payload);
-    else await API.adminServicos.create(payload);
-
-    e.target.reset();
-    mostrarSucesso("Servico salvo com sucesso!");
-    await carregarServicos();
-  } catch (erro) {
-    mostrarErro(`Erro ao salvar servico: ${erro?.message || "falha desconhecida"}`);
-  }
-}
-
-/* ============================================================
-   CRUD — HORARIOS
-   ============================================================ */
-async function carregarHorarios() {
-  const tabela = document.getElementById("tbody-horarios");
-  if (!tabela) return;
-
-  renderEstadoTabela(tabela, 5, "Carregando...");
-  try {
-    const data = await API.adminHorarios.get();
-    horariosConfigCache = data;
-    const dias = horariosConfigCache.configuracao?.diasSemana || {};
-
-    const intervalo = document.getElementById("intervalo-padrao");
-    if (intervalo) intervalo.value = horariosConfigCache.configuracao?.intervaloPadrao || 30;
-
-    const rotulos = {
-      segunda: "Segunda",
-      terca: "Terca",
-      quarta: "Quarta",
-      quinta: "Quinta",
-      sexta: "Sexta",
-      sabado: "Sabado",
-      domingo: "Domingo"
-    };
-
-    tabela.innerHTML = Object.keys(rotulos).map((dia) => {
-      const d = dias[dia] || { ativo: false, inicio: null, fim: null };
-      return `<tr><td>${rotulos[dia]}</td><td>${d.ativo ? "Ativo" : "Inativo"}</td><td>${d.inicio || "-"}</td><td>${d.fim || "-"}</td><td><button class="btn-acao btn-editar" type="button" onclick="editarHorario('${dia}')">Editar</button></td></tr>`;
-    }).join("");
-
-    preencherFormularioHorario(document.getElementById("dia-semana").value);
-  } catch (erro) {
-    renderEstadoTabela(tabela, 5, `Erro ao carregar horarios.<br><small>${erro?.message || "falha na API"}</small>`, "#e05555");
-  }
-}
-
-function preencherFormularioHorario(dia) {
-  const dias = horariosConfigCache?.configuracao?.diasSemana || {};
-  const confDia = dias[dia] || { ativo: false, inicio: null, fim: null };
-
-  document.getElementById("dia-semana").value = dia;
-  document.getElementById("dia-ativo").checked = !!confDia.ativo;
-  document.getElementById("inicio-horario").value = confDia.inicio || "";
-  document.getElementById("fim-horario").value = confDia.fim || "";
-}
-
-function editarHorario(dia) {
-  preencherFormularioHorario(dia);
-}
-
-async function salvarHorario(e) {
-  e.preventDefault();
-
-  const dia = document.getElementById("dia-semana").value;
-  const ativo = document.getElementById("dia-ativo").checked;
-  const inicio = document.getElementById("inicio-horario").value;
-  const fim = document.getElementById("fim-horario").value;
-  const intervalo = Number(document.getElementById("intervalo-padrao").value);
-
-  if (!horariosConfigCache?.configuracao) {
-    horariosConfigCache = { configuracao: { intervaloPadrao: 30, diasSemana: {} } };
-  }
-
-  if (!horariosConfigCache.configuracao.diasSemana) {
-    horariosConfigCache.configuracao.diasSemana = {};
-  }
-
-  horariosConfigCache.configuracao.intervaloPadrao = intervalo;
-  horariosConfigCache.configuracao.diasSemana[dia] = {
-    inicio: ativo ? inicio || null : null,
-    fim: ativo ? fim || null : null,
-    ativo
-  };
-
-  try {
-    await API.adminHorarios.update(horariosConfigCache);
-    mostrarSucesso("Horario salvo com sucesso!");
-    await carregarHorarios();
-  } catch (erro) {
-    mostrarErro(`Erro ao salvar horario: ${erro?.message || "falha desconhecida"}`);
-  }
-}
-
-function limparFormularioHorario() {
-  preencherFormularioHorario(document.getElementById("dia-semana").value);
-}
-
-/* ============================================================
-   CRUD — IMPREVISTOS
-   ============================================================ */
-async function carregarImprevistos() {
-  const tabela = document.getElementById("tbody-imprevistos");
-  if (!tabela) return;
-
-  renderEstadoTabela(tabela, 4, "Carregando...");
-
-  try {
-    const itens = await API.adminImprevistos.list();
-    if (!Array.isArray(itens) || !itens.length) {
-      renderEstadoTabela(tabela, 4, "Nenhum imprevisto cadastrado.");
-      return;
-    }
-
-    tabela.innerHTML = itens.map((item) => `
-    <tr>
-      <td>${item.data}</td>
-      <td>${item.periodo}</td>
-      <td>${item.motivo}</td>
-      <td><button class="btn-acao btn-excluir-tabela" type="button" onclick="excluirImprevisto(${item.id})">Excluir</button></td>
-    </tr>
-  `).join("");
-  } catch (erro) {
-    renderEstadoTabela(tabela, 4, `Erro ao carregar.<br><small>${erro?.message || "falha na API"}</small>`, "#e05555");
-  }
-}
-
-async function excluirImprevisto(id) {
-  await API.adminImprevistos.delete(id);
-  await carregarImprevistos();
-}
-
-async function salvarImprevisto(e) {
-  e.preventDefault();
-  try {
-    await API.adminImprevistos.create({
-      data: document.getElementById("data-imprevisto").value,
-      periodo: document.getElementById("periodo-imprevisto").value,
-      motivo: document.getElementById("motivo-imprevisto").value
-    });
-    e.target.reset();
-    mostrarSucesso("Bloqueio adicionado!");
-    await carregarImprevistos();
-  } catch (erro) {
-    mostrarErro(`Erro ao salvar imprevisto: ${erro?.message || "falha desconhecida"}`);
-  }
-}
-
-/* ============================================================
-   CRUD — MIDIAS / GALERIA
-   ============================================================ */
-async function carregarMidiasAdmin() {
-  await API.carregarGaleria();
-}
-
-async function excluirMidia(id) {
-  await API.adminMidias.delete(id);
-  await carregarMidiasAdmin();
-}
-
-function uploadMidia(arquivo, titulo, categoria, onProgress = () => {}) {
-  return new Promise((resolve, reject) => {
-    if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
-      reject(new Error("Faca login como administrador primeiro."));
-      return;
-    }
-
-    const token = typeof getToken === "function" ? getToken() : "";
-    if (!token) {
-      reject(new Error("Token nao encontrado. Faca login novamente."));
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", arquivo);
-    formData.append("titulo", titulo);
-    formData.append("categoria", categoria);
-
-    const xhr = new XMLHttpRequest();
-
-    xhr.upload.addEventListener("progress", (event) => {
-      if (!event.lengthComputable) return;
-      const percentual = Math.round((event.loaded / event.total) * 100);
-      onProgress(percentual);
-    });
-
-    xhr.addEventListener("load", () => {
-      let resposta = {};
-      try {
-        resposta = JSON.parse(xhr.responseText || "{}");
-      } catch (error) {
-        reject(new Error("Resposta invalida do servidor."));
-        return;
-      }
-
-      if (xhr.status === 200 && (resposta.status === "success" || resposta.status === "sucesso")) {
-        resolve(resposta);
-        return;
-      }
-
-      if (xhr.status === 401) {
-        reject(new Error("Sessao expirada. Faca login novamente."));
-        return;
-      }
-
-      reject(new Error(resposta.mensagem || "Falha desconhecida."));
-    });
-
-    xhr.addEventListener("error", () => {
-      reject(new Error("Servidor offline. Inicie o Spring Boot."));
-    });
-
-    xhr.addEventListener("abort", () => {
-      reject(new Error("Upload cancelado."));
-    });
-
-    xhr.open("POST", "http://localhost:8080/api/admin/upload");
-    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    xhr.send(formData);
+function removerBarbeiro(id) {
+  abrirModalConfirmar('Remover barbeiro', 'Deseja remover este barbeiro?', async () => {
+    await API.adminBarbeiros.excluir(id);
+    mostrarSucesso('Barbeiro removido.');
+    await carregarBarbeiros();
+    await atualizarBadges();
   });
 }
 
-function diagnosticarToken() {
-  const token = typeof getToken === "function" ? getToken() : "";
-  const logado = typeof isAdminLogado === "function" ? isAdminLogado() : false;
+async function carregarHorarios() {
+  const dados = await API.horarios();
+  const tbody = document.getElementById('tbody-horarios');
+  const dias = dados.configuracao?.diasSemana || {};
 
-  console.log("=== DIAGNOSTICO TOKEN ===");
-  console.log("Logado:", logado);
-  console.log("Token:", token);
-  console.log("Header que sera enviado:", `Bearer ${token}`);
+  document.getElementById('intervalo-padrao').value = dados.configuracao?.intervaloPadrao || 30;
 
-  alert(`Logado: ${logado}\nToken: ${token}\nVerifique o console (F12).`);
+  const ordem = ['segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo'];
+  tbody.innerHTML = ordem.map((dia) => {
+    const d = dias[dia] || { ativo: false };
+    return `<tr><td>${dia}</td><td>${d.ativo ? 'Ativo' : 'Inativo'}</td><td>${d.inicio || '-'}</td><td>${d.fim || '-'}</td><td><button type="button" class="btn-acao btn-editar" onclick="editarHorario('${dia}')">Editar</button></td></tr>`;
+  }).join('');
+
+  window.__horariosCache = dados;
 }
 
-async function uploadFoto(e) {
-  e.preventDefault();
+function editarHorario(dia) {
+  const dados = window.__horariosCache || { configuracao: { diasSemana: {} } };
+  const d = dados.configuracao.diasSemana[dia] || { ativo: false, inicio: '', fim: '' };
+  document.getElementById('dia-semana').value = dia;
+  document.getElementById('dia-ativo').checked = !!d.ativo;
+  document.getElementById('inicio-horario').value = d.inicio || '';
+  document.getElementById('fim-horario').value = d.fim || '';
+}
 
-  const arquivo = window.arquivoSelecionado || selectedUploadFile || document.getElementById("file-upload")?.files?.[0];
-  const titulo = (document.getElementById("titulo-midia")?.value || "").trim();
-  const categoria = document.getElementById("categoria-midia")?.value || "galeria";
+async function salvarHorario(event) {
+  event.preventDefault();
+  const dados = window.__horariosCache;
+  const dia = document.getElementById('dia-semana').value;
 
-  if (!titulo) {
-    mostrarErro("Informe um titulo para a imagem antes de enviar.");
+  dados.configuracao.intervaloPadrao = Number(document.getElementById('intervalo-padrao').value || 30);
+  dados.configuracao.diasSemana[dia] = {
+    ativo: document.getElementById('dia-ativo').checked,
+    inicio: document.getElementById('inicio-horario').value || null,
+    fim: document.getElementById('fim-horario').value || null
+  };
+
+  await API.adminHorarios.salvar(dados);
+  mostrarSucesso('Horarios atualizados.');
+  await carregarHorarios();
+}
+
+async function carregarImprevistos() {
+  const tbody = document.getElementById('tbody-imprevistos');
+  if (!tbody) return;
+
+  cacheImprevistos = await API.adminImprevistos.listar();
+  if (!cacheImprevistos.length) {
+    renderEstadoTabela(tbody, 4, 'Nenhum bloqueio cadastrado.');
     return;
   }
 
-  if (!arquivo) {
-    mostrarErro("Selecione uma imagem para enviar.");
+  tbody.innerHTML = cacheImprevistos.map((i) => `
+    <tr>
+      <td>${i.data}</td>
+      <td>${i.periodo}</td>
+      <td>${i.motivo}</td>
+      <td><button class="btn-acao btn-excluir-tabela" type="button" onclick="excluirImprevisto(${i.id})">Excluir</button></td>
+    </tr>
+  `).join('');
+}
+
+async function salvarImprevisto(event) {
+  event.preventDefault();
+  await API.adminImprevistos.criar({
+    data: document.getElementById('data-imprevisto').value,
+    periodo: document.getElementById('periodo-imprevisto').value,
+    motivo: document.getElementById('motivo-imprevisto').value.trim()
+  });
+  event.target.reset();
+  mostrarSucesso('Bloqueio adicionado.');
+  await carregarImprevistos();
+  await atualizarBadges();
+}
+
+function excluirImprevisto(id) {
+  abrirModalConfirmar('Excluir bloqueio', 'Deseja remover este bloqueio?', async () => {
+    await API.adminImprevistos.excluir(id);
+    mostrarSucesso('Bloqueio removido.');
+    await carregarImprevistos();
+    await atualizarBadges();
+  });
+}
+
+async function carregarMidias() {
+  const tbody = document.getElementById('midias-lista');
+  if (!tbody) return;
+
+  cacheMidias = await API.galeria();
+  if (!cacheMidias.length) {
+    renderEstadoTabela(tbody, 6, 'Nenhuma midia cadastrada.');
     return;
   }
 
-  if (typeof isAdminLogado !== "function" || !isAdminLogado()) {
-    mostrarErro("Faca login como administrador primeiro.");
-    setTimeout(() => { window.location.href = "login.html"; }, 1500);
+  tbody.innerHTML = cacheMidias.map((m) => `
+    <tr>
+      <td>${String(m.tipo || '').startsWith('video/') ? 'Video' : 'Foto'}</td>
+      <td>${m.categoria || '-'}</td>
+      <td>${m.titulo || '-'}</td>
+      <td><a href="${m.url}" target="_blank" rel="noopener noreferrer">Abrir</a></td>
+      <td>${m.nomeArquivo || '-'}</td>
+      <td><button class="btn-acao btn-excluir-tabela" type="button" onclick="excluirMidia('${encodeURIComponent(m.nomeArquivo || '')}')">Excluir</button></td>
+    </tr>
+  `).join('');
+
+  const contador = document.getElementById('galeria-contador');
+  if (contador) contador.textContent = `${cacheMidias.length} item(ns)`;
+}
+
+async function uploadFoto(event) {
+  event.preventDefault();
+
+  const arquivo = document.getElementById('file-upload').files?.[0];
+  const titulo = document.getElementById('titulo-midia').value.trim();
+  const categoria = document.getElementById('categoria-midia').value;
+
+  if (!arquivo || !titulo) {
+    mostrarErro('Selecione arquivo e informe titulo.');
     return;
   }
 
-  const progressWrap = document.getElementById("progress-wrap");
-  if (progressWrap) progressWrap.style.display = "block";
-  atualizarProgresso(0);
+  const formData = new FormData();
+  formData.append('file', arquivo);
+  formData.append('titulo', titulo);
+  formData.append('categoria', categoria);
 
-  try {
-    const online = await API.checkServerOnline();
-    if (!online) throw new Error("Spring Boot nao esta rodando. Inicie o servidor.");
+  const progress = document.getElementById('progress-fill');
+  const progressPct = document.getElementById('progress-pct');
+  document.getElementById('progress-wrap').style.display = 'block';
 
-    await uploadMidia(arquivo, titulo, categoria, (percentual) => {
-      atualizarProgresso(percentual);
-    });
+  await API.adminMidia.upload(formData, (pct) => {
+    if (progress) progress.style.width = `${pct}%`;
+    if (progressPct) progressPct.textContent = `${pct}%`;
+  });
 
-    await API.carregarGaleria();
-    mostrarSucesso("Imagem adicionada a galeria com sucesso!");
-    e.target.reset();
-    limparPreviewUpload();
-  } catch (error) {
-    const message = error?.message || "Falha ao enviar imagem.";
-    if (message.toLowerCase().includes("sessao expirada")) {
-      mostrarErro(message);
-      if (typeof fazerLogout === "function") fazerLogout();
+  event.target.reset();
+  document.getElementById('progress-wrap').style.display = 'none';
+  mostrarSucesso('Upload concluido.');
+  await carregarMidias();
+  await atualizarBadges();
+}
+
+function excluirMidia(nomeArquivoEncode) {
+  const nomeArquivo = decodeURIComponent(nomeArquivoEncode);
+  abrirModalConfirmar('Excluir midia', `Deseja remover ${nomeArquivo}?`, async () => {
+    await API.adminMidia.excluir(nomeArquivo);
+    mostrarSucesso('Midia removida.');
+    await carregarMidias();
+    await atualizarBadges();
+  });
+}
+
+async function carregarAgendamentos() {
+  const tbody = document.getElementById('tbody-agendamentos');
+  if (!tbody) return;
+
+  const dataMin = document.getElementById('filtro-data').value || '';
+  cacheAgendamentos = await API.adminAgendamentos.listar(dataMin);
+  filtrarAgendamentos();
+}
+
+function filtrarAgendamentos() {
+  const tbody = document.getElementById('tbody-agendamentos');
+  const status = document.getElementById('filtro-status').value;
+
+  const lista = status === 'todos'
+    ? cacheAgendamentos
+    : cacheAgendamentos.filter((item) => String(item.status || '').toLowerCase() === status);
+
+  if (!lista.length) {
+    renderEstadoTabela(tbody, 7, 'Nenhum agendamento encontrado.');
+    return;
+  }
+
+  tbody.innerHTML = lista.map((a) => `
+    <tr>
+      <td>${a.nomeCliente || a.nome}</td>
+      <td>${a.servico}</td>
+      <td>${a.barbeiro || '-'}</td>
+      <td>${a.data}</td>
+      <td>${a.horario}</td>
+      <td>${a.status}</td>
+      <td><button class="btn-acao btn-excluir-tabela" type="button" onclick="cancelarAgendamento(${a.id})">Cancelar</button></td>
+    </tr>
+  `).join('');
+}
+
+function cancelarAgendamento(id) {
+  abrirModalConfirmar('Cancelar agendamento', 'Deseja cancelar este agendamento?', async () => {
+    await API.adminAgendamentos.cancelar(id);
+    mostrarSucesso('Agendamento cancelado.');
+    await carregarAgendamentos();
+    await atualizarBadges();
+  });
+}
+
+function configurarPreviewBarbeiro() {
+  const input = document.getElementById('foto-barbeiro');
+  input?.addEventListener('change', () => {
+    const file = input.files?.[0];
+    const label = document.getElementById('label-foto-barbeiro');
+    const preview = document.getElementById('preview-barbeiro');
+    const img = document.getElementById('preview-barbeiro-img');
+
+    if (!file) {
+      label.textContent = 'Clique para selecionar foto';
+      preview.style.display = 'none';
       return;
     }
-    mostrarErro(`Erro no upload: ${message}`);
-  } finally {
-    resetarProgresso();
-  }
+
+    label.textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      img.src = evt.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
-async function salvarVideo(e) {
+async function inicializar() {
+  exigirAdmin();
+  await API.adminCheck();
+
+  document.getElementById('form-servico')?.addEventListener('submit', (e) => salvarServico(e).catch((erro) => mostrarErro(erro.message)));
+  document.getElementById('form-horarios')?.addEventListener('submit', (e) => salvarHorario(e).catch((erro) => mostrarErro(erro.message)));
+  document.getElementById('form-imprevisto')?.addEventListener('submit', (e) => salvarImprevisto(e).catch((erro) => mostrarErro(erro.message)));
+  document.getElementById('form-foto')?.addEventListener('submit', (e) => uploadFoto(e).catch((erro) => mostrarErro(erro.message)));
+
+  document.getElementById('btn-filtrar-data')?.addEventListener('click', () => carregarAgendamentos().catch((erro) => mostrarErro(erro.message)));
+
+  configurarPreviewBarbeiro();
+
+  await Promise.all([
+    carregarServicos(),
+    carregarBarbeiros(),
+    carregarHorarios(),
+    carregarImprevistos(),
+    carregarMidias(),
+    carregarAgendamentos(),
+    atualizarBadges()
+  ]);
+}
+
+window.switchTab = switchTab;
+window.editarServico = editarServico;
+window.excluirServico = excluirServico;
+window.removerBarbeiro = removerBarbeiro;
+window.salvarBarbeiro = salvarBarbeiro;
+window.editarHorario = editarHorario;
+window.excluirImprevisto = excluirImprevisto;
+window.togglePausaBarbeiro = togglePausaBarbeiro;
+window.filtrarAgendamentos = filtrarAgendamentos;
+window.cancelarAgendamento = cancelarAgendamento;
+window.excluirMidia = excluirMidia;
+
+document.addEventListener('DOMContentLoaded', () => {
+  inicializar().catch((erro) => {
+    console.error('Erro no painel:', erro);
+    mostrarErro(erro.message || 'Falha ao inicializar painel.');
+  });
+});

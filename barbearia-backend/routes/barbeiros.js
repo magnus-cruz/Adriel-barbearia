@@ -31,56 +31,62 @@ const upload = multer({
   }
 });
 
-/* GET /api/barbeiros - público */
+function whatsappValido(valor) {
+  return /^\d{10,11}$/.test(String(valor || '').trim());
+}
+
+function proximoId(lista) {
+  if (!lista.length) return 1;
+  return Math.max(...lista.map((b) => Number(b.id) || 0)) + 1;
+}
+
+/* GET /api/barbeiros - publico (apenas ativos e nao pausados) */
 router.get('/barbeiros', (req, res) => {
+  const lista = ler('barbeiros.json', []);
+  res.json(lista.filter((b) => b.ativo !== false && !b.pausado));
+});
+
+/* GET /api/admin/barbeiros */
+router.get('/admin/barbeiros', autenticarAdmin, (req, res) => {
   res.json(ler('barbeiros.json', []));
 });
 
 /* POST /api/admin/barbeiros */
 router.post('/admin/barbeiros', autenticarAdmin, upload.single('foto'), (req, res) => {
   try {
-    const { nome, especialidade, instagram, ativo = true } = req.body;
+    const nome = String(req.body.nome || '').trim();
+    const whatsapp = String(req.body.whatsapp || '').trim();
 
     if (!nome) {
-      return res.status(400).json({
-        status: 'error',
-        mensagem: 'Nome é obrigatório.'
-      });
+      return res.status(400).json({ status: 'error', mensagem: 'Nome e obrigatorio.' });
     }
 
-    const fotoUrl = req.file
-      ? 'http://localhost:8080/api/uploads/' + req.file.filename
-      : null;
+    if (!whatsappValido(whatsapp)) {
+      return res.status(400).json({ status: 'error', mensagem: 'WhatsApp invalido. Use 10 ou 11 digitos com DDD.' });
+    }
 
+    const fotoUrl = req.file ? 'http://localhost:8080/api/uploads/' + req.file.filename : null;
     const lista = ler('barbeiros.json', []);
-    const novoId = lista.length > 0
-      ? Math.max(...lista.map((b) => b.id)) + 1
-      : 1;
 
     const novo = {
-      id: novoId,
+      id: proximoId(lista),
       nome,
-      especialidade: especialidade || 'Barbeiro',
-      instagram: instagram || '',
+      especialidade: String(req.body.especialidade || '').trim(),
+      whatsapp,
+      instagram: String(req.body.instagram || '').trim(),
       fotoUrl,
-      ativo: ativo !== 'false' && ativo !== false,
-      criadoEm: new Date().toISOString().split('T')[0]
+      ativo: true,
+      pausado: false,
+      motivoPausa: '',
+      criadoEm: new Date().toISOString().slice(0, 10)
     };
 
     lista.push(novo);
     salvar('barbeiros.json', lista);
 
-    console.log('Barbeiro adicionado:', novo.nome);
-    return res.json({
-      status: 'success',
-      mensagem: 'Barbeiro adicionado com sucesso.',
-      barbeiro: novo
-    });
+    return res.json({ status: 'success', mensagem: 'Barbeiro adicionado com sucesso.', barbeiro: novo });
   } catch (e) {
-    return res.status(500).json({
-      status: 'error',
-      mensagem: 'Erro ao salvar barbeiro: ' + e.message
-    });
+    return res.status(500).json({ status: 'error', mensagem: 'Erro ao salvar barbeiro: ' + e.message });
   }
 });
 
@@ -92,38 +98,62 @@ router.put('/admin/barbeiros/:id', autenticarAdmin, upload.single('foto'), (req,
     const idx = lista.findIndex((b) => b.id === id);
 
     if (idx === -1) {
-      return res.status(404).json({
-        status: 'error',
-        mensagem: 'Barbeiro não encontrado.'
-      });
+      return res.status(404).json({ status: 'error', mensagem: 'Barbeiro nao encontrado.' });
     }
 
-    if (req.file) {
-      /* Remove foto antiga se existir */
-      if (lista[idx].fotoUrl) {
-        const nomeAntigo = lista[idx].fotoUrl.split('/').pop();
-        const caminhoAntigo = path.join(UPLOADS_DIR, nomeAntigo);
-        if (fs.existsSync(caminhoAntigo)) {
-          fs.unlinkSync(caminhoAntigo);
-        }
-      }
-
-      req.body.fotoUrl = 'http://localhost:8080/api/uploads/' + req.file.filename;
+    if (req.body.whatsapp !== undefined && !whatsappValido(req.body.whatsapp)) {
+      return res.status(400).json({ status: 'error', mensagem: 'WhatsApp invalido. Use 10 ou 11 digitos com DDD.' });
     }
 
-    lista[idx] = { ...lista[idx], ...req.body, id };
+    if (req.file && lista[idx].fotoUrl) {
+      const nomeAntigo = lista[idx].fotoUrl.split('/').pop();
+      const caminhoAntigo = path.join(UPLOADS_DIR, nomeAntigo);
+      if (fs.existsSync(caminhoAntigo)) fs.unlinkSync(caminhoAntigo);
+    }
+
+    const atual = lista[idx];
+    lista[idx] = {
+      ...atual,
+      nome: req.body.nome !== undefined ? String(req.body.nome).trim() : atual.nome,
+      especialidade: req.body.especialidade !== undefined ? String(req.body.especialidade).trim() : atual.especialidade,
+      whatsapp: req.body.whatsapp !== undefined ? String(req.body.whatsapp).trim() : atual.whatsapp,
+      instagram: req.body.instagram !== undefined ? String(req.body.instagram).trim() : atual.instagram,
+      ativo: req.body.ativo !== undefined ? req.body.ativo === true || req.body.ativo === 'true' : atual.ativo,
+      fotoUrl: req.file ? 'http://localhost:8080/api/uploads/' + req.file.filename : atual.fotoUrl
+    };
+
+    salvar('barbeiros.json', lista);
+    return res.json({ status: 'success', mensagem: 'Barbeiro atualizado.', barbeiro: lista[idx] });
+  } catch (e) {
+    return res.status(500).json({ status: 'error', mensagem: 'Erro ao atualizar: ' + e.message });
+  }
+});
+
+/* PATCH /api/admin/barbeiros/:id/pausar */
+router.patch('/admin/barbeiros/:id/pausar', autenticarAdmin, (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const { pausado, motivoPausa } = req.body || {};
+    const lista = ler('barbeiros.json', []);
+    const idx = lista.findIndex((b) => b.id === id);
+
+    if (idx === -1) {
+      return res.status(404).json({ status: 'error', mensagem: 'Barbeiro nao encontrado.' });
+    }
+
+    const estaPausado = pausado === true || pausado === 'true';
+    lista[idx].pausado = estaPausado;
+    lista[idx].motivoPausa = estaPausado ? String(motivoPausa || 'Indisponivel').trim() : '';
+
     salvar('barbeiros.json', lista);
 
     return res.json({
       status: 'success',
-      mensagem: 'Barbeiro atualizado.',
+      mensagem: estaPausado ? 'Barbeiro pausado com sucesso.' : 'Barbeiro reativado com sucesso.',
       barbeiro: lista[idx]
     });
   } catch (e) {
-    return res.status(500).json({
-      status: 'error',
-      mensagem: 'Erro ao atualizar: ' + e.message
-    });
+    return res.status(500).json({ status: 'error', mensagem: 'Erro ao atualizar: ' + e.message });
   }
 });
 
@@ -135,34 +165,21 @@ router.delete('/admin/barbeiros/:id', autenticarAdmin, (req, res) => {
     const barbeiro = lista.find((b) => b.id === id);
 
     if (!barbeiro) {
-      return res.status(404).json({
-        status: 'error',
-        mensagem: 'Barbeiro não encontrado.'
-      });
+      return res.status(404).json({ status: 'error', mensagem: 'Barbeiro nao encontrado.' });
     }
 
-    /* Remove foto do disco */
     if (barbeiro.fotoUrl) {
       const nome = barbeiro.fotoUrl.split('/').pop();
       const caminho = path.join(UPLOADS_DIR, nome);
-      if (fs.existsSync(caminho)) {
-        fs.unlinkSync(caminho);
-      }
+      if (fs.existsSync(caminho)) fs.unlinkSync(caminho);
     }
 
     lista = lista.filter((b) => b.id !== id);
     salvar('barbeiros.json', lista);
 
-    console.log('Barbeiro removido:', barbeiro.nome);
-    return res.json({
-      status: 'success',
-      mensagem: 'Barbeiro removido com sucesso.'
-    });
+    return res.json({ status: 'success', mensagem: 'Barbeiro removido com sucesso.' });
   } catch (e) {
-    return res.status(500).json({
-      status: 'error',
-      mensagem: 'Erro ao remover: ' + e.message
-    });
+    return res.status(500).json({ status: 'error', mensagem: 'Erro ao remover: ' + e.message });
   }
 });
 

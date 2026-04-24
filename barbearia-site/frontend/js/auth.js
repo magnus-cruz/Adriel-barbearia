@@ -1,45 +1,57 @@
-// Chaves de autenticacao local do painel administrativo.
-const AUTH_KEY = "barber_admin_token";
-const LOGIN_KEY = "barber_admin_logged";
-const TOKEN = "barberco-admin-2026";
+/* ================================================
+   Alpha Barber - auth.js
+   Funcao: autenticar, validar e encerrar sessao admin.
+   ================================================ */
 
-// Verifica se a sessao administrativa local esta ativa.
-function isAdminLogado() {
-  return localStorage.getItem(AUTH_KEY) === TOKEN
-    && localStorage.getItem(LOGIN_KEY) === "true";
-}
+'use strict';
 
-// Realiza login local do admin com credenciais fixas definidas no projeto.
+const AUTH_KEY = 'barber_admin_token';
+const LOGIN_KEY = 'barber_admin_logged';
+const TOKEN = 'barberco-admin-2026';
+
+const CREDENCIAIS = {
+  usuario: 'admin',
+  senha: 'barbearia123'
+};
+
 function fazerLogin(usuario, senha) {
-  if (usuario === "admin" && senha === "barbearia123") {
+  if (usuario === CREDENCIAIS.usuario && senha === CREDENCIAIS.senha) {
     localStorage.setItem(AUTH_KEY, TOKEN);
-    localStorage.setItem(LOGIN_KEY, "true");
+    localStorage.setItem(LOGIN_KEY, 'true');
     return true;
   }
   return false;
 }
 
-// Encerra a sessao e retorna para a tela de login.
 function fazerLogout() {
   localStorage.removeItem(AUTH_KEY);
   localStorage.removeItem(LOGIN_KEY);
-  window.location.href = "/admin/login.html";
+  window.location.href = '/admin/login.html';
 }
 
-// Bloqueia telas administrativas para usuarios nao autenticados.
+function isAdminLogado() {
+  return localStorage.getItem(AUTH_KEY) === TOKEN && localStorage.getItem(LOGIN_KEY) === 'true';
+}
+
 function exigirAdmin() {
   if (!isAdminLogado()) {
-    window.location.href = "/admin/login.html";
+    window.location.href = '/admin/login.html';
   }
 }
 
-// Retorna o token atual da sessao para envio no header Authorization.
-function getToken() {
-  return localStorage.getItem(AUTH_KEY) || "";
+function redirecionarSeLogado() {
+  if (isAdminLogado()) {
+    window.location.href = '/admin/painel.html';
+  }
 }
 
-window.isAdminLogado = isAdminLogado;
+function getToken() {
+  return localStorage.getItem(AUTH_KEY) || '';
+}
+
 window.fazerLogin = fazerLogin;
 window.fazerLogout = fazerLogout;
+window.isAdminLogado = isAdminLogado;
 window.exigirAdmin = exigirAdmin;
+window.redirecionarSeLogado = redirecionarSeLogado;
 window.getToken = getToken;

@@ -1,0 +1,66 @@
+/* ================================================
+   Alpha Barber - loader.css
+   Funcao: estilos da tela de carregamento responsiva.
+   ================================================ */
+
+:root {
+  --black: #000000;
+  --carbon-black: #171714;
+  --pale-oak: #CFBDA6;
+  --taupe: #443A2E;
+  --dark-goldenrod: #C28730;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 20%, rgba(194,135,48,0.16), transparent 55%), var(--black);
+  color: var(--pale-oak);
+  font-family: 'Barlow', sans-serif;
+  padding: 1rem;
+}
+
+.loader-wrap {
+  width: min(92vw, 430px);
+  border: 1px solid rgba(68,58,46,0.9);
+  background: linear-gradient(145deg, rgba(23,23,20,0.98), rgba(11,11,10,0.95));
+  border-radius: 14px;
+  padding: 1.3rem;
+  text-align: center;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.42);
+}
+
+.loader-logo { margin-bottom: 0.7rem; }
+.logo-alpha { display: block; letter-spacing: 0.48em; font-size: 0.72rem; }
+.logo-barber { display: block; font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 8vw, 2.8rem); }
+.logo-accent { color: var(--dark-goldenrod); }
+
+.loader-text { color: rgba(207,189,166,0.78); margin-bottom: 0.8rem; }
+
+.loader-track {
+  height: 8px;
+  background: rgba(68,58,46,0.65);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.loader-fill {
+  width: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #8d5f22, var(--dark-goldenrod));
+  transition: width .2s ease;
+}
+
+.loader-pct {
+  margin-top: 0.6rem;
+  display: block;
+  color: var(--dark-goldenrod);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .loader-wrap { padding: 1rem; border-radius: 10px; }
+}

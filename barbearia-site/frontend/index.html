@@ -1,104 +1,193 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  <!-- ================================================
+       Alpha Barber - index.html
+       Funcao: pagina inicial publica da barbearia.
+       Layout refinado com hero, servicos + galeria split, barbeiros.
+       ================================================ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alpha Barber | Home</title>
+  <title>Alpha Barber - Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/galeria.css">
 </head>
-<body>
-  <header class="topbar">
+<body class="pagina-publica">
+  <header class="site-header">
     <div class="container">
       <nav>
-        <div class="logo-alpha-barber">
-          <img src="/img/logo-alpha-barber.png"
-               alt="Alpha Barber"
-               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <a href="index.html" class="logo-alpha-barber">
+          <img src="img/Logo.png" alt="Alpha Barber" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
           <div class="logo-texto" style="display:none">
             <span class="logo-alpha">ALPHA</span>
             <span class="logo-barber"><span class="logo-accent">B</span>ARBER</span>
           </div>
-        </div>
-
+        </a>
         <ul class="nav-links" id="nav-links">
-          <li><a class="active" href="index.html">Home</a></li>
+          <li><a href="index.html" class="active">Home</a></li>
           <li><a href="agendar.html">Agendar</a></li>
           <li><a href="galeria.html">Galeria</a></li>
-          <li><a href="cursos.html">Cursos</a></li>
           <li><a href="localizacao.html">Localizacao</a></li>
-          <li><a class="btn-admin-nav" href="admin/login.html">Admin</a></li>
+          <li><a href="admin/login.html" class="btn-admin-nav">Admin</a></li>
         </ul>
-
-        <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false" onclick="toggleMenu()">
-          <span class="ham-line"></span>
-          <span class="ham-line"></span>
-          <span class="ham-line"></span>
+        <button class="hamburger" id="hamburger" aria-label="Abrir menu" aria-expanded="false" onclick="toggleMenu()">
+          <span class="ham-line"></span><span class="ham-line"></span><span class="ham-line"></span>
         </button>
       </nav>
     </div>
   </header>
+
   <div class="nav-overlay" id="nav-overlay" onclick="fecharMenu()"></div>
 
-  <section class="hero">
-    <div class="container">
-      <article class="hero-card">
-        <h1>Classico no corte. Moderno no detalhe.</h1>
-        <p>Experiencia premium com acabamento impecavel, ambiente elegante e profissionais especializados em estilo masculino.</p>
-        <a class="btn" href="agendar.html"><i class="fa-solid fa-calendar-check"></i> Agendar Agora</a>
-      </article>
-      <article class="card">
-        <h2>Sobre nos</h2>
-        <p class="small">A Alpha Barber nasceu para elevar o cuidado masculino com tecnicas classicas e atendimento moderno. Cada servico e pensado para oferecer estilo, conforto e personalidade.</p>
-      </article>
-    </div>
-  </section>
+  <main>
+    <!-- ================================================
+         HERO — novo layout com stats e decoracao
+         ================================================ -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="hero-tag">
+          <span class="hero-tag-line"></span>
+          Alpha Barber
+        </div>
+        <h1 class="hero-titulo">
+          Tradição em<br>
+          <em>cortes, barba</em><br>
+          e estilo masculino.
+        </h1>
+        <p class="hero-desc">
+          Atendimento personalizado, estrutura moderna
+          e equipe especializada para elevar seu visual.
+        </p>
+        <div class="hero-btns">
+          <a href="agendar.html" class="btn-primary">
+            Agendar Agora
+          </a>
+          <a href="galeria.html" class="btn-hero-ghost">
+            Ver galeria
+            <svg width="16" height="16" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor"
+                 stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+        <!-- Stats rapidos -->
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="stat-num">500+</span>
+            <span class="stat-label">Clientes</span>
+          </div>
+          <div class="hero-stat-div"></div>
+          <div class="hero-stat">
+            <span class="stat-num">5+</span>
+            <span class="stat-label">Anos</span>
+          </div>
+          <div class="hero-stat-div"></div>
+          <div class="hero-stat">
+            <span class="stat-num">98%</span>
+            <span class="stat-label">Satisfação</span>
+          </div>
+        </div>
+      </div>
 
-  <section class="section">
-    <div class="container">
-      <h2>Servicos</h2>
-      <div id="servicos-home" class="grid services"></div>
-    </div>
-  </section>
+      <!-- Decoracao lado direito -->
+      <div class="hero-deco">
+        <div class="hero-deco-ring hero-deco-ring-1"></div>
+        <div class="hero-deco-ring hero-deco-ring-2"></div>
+        <div class="hero-deco-card">
+          <div class="deco-card-inner">
+            <div class="deco-icon">✂</div>
+            <div class="deco-text">Premium Cuts</div>
+            <div class="deco-sub">Since 2019</div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <section class="section">
-    <div class="container">
-      <h2>Galeria Preview</h2>
-      <div id="preview-galeria" class="gallery-grid"></div>
-    </div>
-  </section>
+    <!-- ================================================
+         SEÇÃO SPLIT — SERVIÇOS + GALERIA LADO A LADO
+         ================================================ -->
+    <section class="secao-split">
+      <div class="secao-split-inner">
 
-  <footer class="footer">
-    <div class="container">
-      <p><i class="fa-solid fa-location-dot"></i> Rua Exemplo, 123 - Centro - Brasilia/DF</p>
-      <p><i class="fa-regular fa-clock"></i> Seg-Sex 09h as 19h | Sabado 08h as 17h</p>
-      <p><i class="fa-brands fa-instagram"></i> @alpha.barber</p>
+        <!-- COLUNA ESQUERDA: SERVIÇOS -->
+        <div class="split-col split-servicos">
+          <div class="section-tag">O que oferecemos</div>
+          <h2 class="section-title">Serviços<br>& Preços</h2>
+
+          <div class="servicos-lista" id="servicos-home">
+            <!-- Carregado via JS -->
+            <div class="servico-skeleton"></div>
+            <div class="servico-skeleton"></div>
+            <div class="servico-skeleton"></div>
+          </div>
+
+          <a href="agendar.html" class="btn-primary"
+             style="margin-top:1.5rem;display:inline-block">
+            Agendar Serviço
+          </a>
+        </div>
+
+        <!-- DIVISOR VERTICAL -->
+        <div class="split-divider"></div>
+
+        <!-- COLUNA DIREITA: PREVIEW GALERIA -->
+        <div class="split-col split-galeria">
+          <div class="section-tag">Nossos Trabalhos</div>
+          <h2 class="section-title">Galeria<br>de Fotos</h2>
+
+          <div class="galeria-preview-grid"
+               id="galeria-preview-home">
+            <!-- 4 fotos em mosaico — carregadas via JS -->
+          </div>
+
+          <a href="galeria.html" class="btn-outline"
+             style="margin-top:1.5rem;display:inline-block">
+            Ver galeria completa →
+          </a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================================================
+         SEÇÃO BARBEIROS
+         ================================================ -->
+    <section class="secao-barbeiros section-dark">
+      <div class="secao-inner">
+        <div class="section-tag">Nossa Equipe</div>
+        <h2 class="section-title">Conheça os<br>Barbeiros</h2>
+
+        <div class="barbeiros-grid" id="barbeiros-home">
+          <!-- Carregado via JS -->
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="logo-texto" style="display:flex">
+          <span class="logo-alpha">ALPHA</span>
+          <span class="logo-barber"><span class="logo-accent">B</span>ARBER</span>
+        </div>
+        <p class="footer-desc">Tradicao, estilo e qualidade em cada atendimento.</p>
+      </div>
+      <div class="footer-col"><h4>Navegacao</h4><ul><li><a href="index.html">Home</a></li><li><a href="agendar.html">Agendar</a></li><li><a href="galeria.html">Galeria</a></li><li><a href="localizacao.html">Localizacao</a></li></ul></div>
+      <div class="footer-col"><h4>Funcionamento</h4><ul><li>Seg-Sex: 09h-19h</li><li>Sabado: 08h-17h</li><li>Domingo: Fechado</li></ul></div>
     </div>
+    <div class="footer-bottom"><span>© 2026 Alpha Barber</span><span>API: Node.js + Express</span></div>
   </footer>
 
-  <script src="js/api.js"></script>
-  <script src="js/nav.js"></script>
-  <script src="js/whatsapp.js"></script>
-  <script>
-    async function initHome() {
-      const servicos = await API.getServicos();
-      document.getElementById("servicos-home").innerHTML = servicos.map((s) => `
-        <article class="card">
-          <h3>${s.nome}</h3>
-          <p class="price">R$ ${s.preco.toFixed(2)}</p>
-          <p class="small">Duracao media: ${s.duracaoMinutos} min</p>
-        </article>`).join("");
+  <button class="wpp-float" onclick="window.open('https://wa.me/5561983088897','_blank')" title="WhatsApp" aria-label="WhatsApp">
+    <svg viewBox="0 0 24 24" width="28" height="28" fill="white" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884"/></svg>
+  </button>
 
-      const midias = await API.getMidias();
-      document.getElementById("preview-galeria").innerHTML = midias
-        .filter((m) => m.tipo === "foto")
-        .slice(0, 4)
-        .map((m) => `<img src="${window.resolveApiAssetUrl ? window.resolveApiAssetUrl(m.url) : m.url}" alt="${m.titulo}">`)
-        .join("");
-    }
-    initHome();
-  </script>
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/nav.js"></script>
+  <script src="js/loader.js"></script>
+  <script src="js/index.js"></script>
 </body>
 </html>
-
-

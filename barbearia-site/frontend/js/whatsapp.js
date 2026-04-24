@@ -1,4 +1,4 @@
-const WHATSAPP_NUMERO = "5561999999999";
+const WHATSAPP_NUMERO = "553897448898";
 
 function buildWhatsAppURL(nome = "", servico = "", data = "", horario = "") {
   const mensagem = `Ola! Gostaria de agendar na barbearia.%0A` +
