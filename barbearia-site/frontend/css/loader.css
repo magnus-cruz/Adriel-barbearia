@@ -1,66 +1,393 @@
 /* ================================================
    Alpha Barber - loader.css
-   Funcao: estilos da tela de carregamento responsiva.
+   Funcao: estilos isolados do loader/pagina de carregamento.
    ================================================ */
 
-:root {
+body.loader-page,
+#loader-overlay {
   --black: #000000;
-  --carbon-black: #171714;
+  --carbon: #171714;
   --pale-oak: #CFBDA6;
   --taupe: #443A2E;
-  --dark-goldenrod: #C28730;
+  --gold: #C28730;
+  --gold-h: #d4953a;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+#loader-overlay,
+#loader-overlay * {
+  box-sizing: border-box;
+}
 
-body {
-  min-height: 100vh;
+#loader-overlay * {
+  margin: 0;
+  padding: 0;
+}
+
+body.loader-page {
+  background: var(--black);
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 30% 20%, rgba(194,135,48,0.16), transparent 55%), var(--black);
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  position: relative;
   color: var(--pale-oak);
-  font-family: 'Barlow', sans-serif;
-  padding: 1rem;
 }
 
-.loader-wrap {
-  width: min(92vw, 430px);
-  border: 1px solid rgba(68,58,46,0.9);
-  background: linear-gradient(145deg, rgba(23,23,20,0.98), rgba(11,11,10,0.95));
-  border-radius: 14px;
-  padding: 1.3rem;
+body.loader-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(194,135,48,0.03) 0px,
+    rgba(194,135,48,0.03) 1px,
+    transparent 1px,
+    transparent 14px
+  );
+  pointer-events: none;
+}
+
+#loader-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(0.9rem, 2.4vw, 1.8rem);
+  padding: clamp(1rem, 4vw, 2.5rem);
+  overflow: hidden;
+  z-index: 9999;
+  transition: opacity 0.5s ease;
+  background: var(--black);
   text-align: center;
-  box-shadow: 0 18px 44px rgba(0,0,0,0.42);
 }
 
-.loader-logo { margin-bottom: 0.7rem; }
-.logo-alpha { display: block; letter-spacing: 0.48em; font-size: 0.72rem; }
-.logo-barber { display: block; font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 8vw, 2.8rem); }
-.logo-accent { color: var(--dark-goldenrod); }
+#loader-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
 
-.loader-text { color: rgba(207,189,166,0.78); margin-bottom: 0.8rem; }
+#loader-overlay::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -10%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(194,135,48,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
 
-.loader-track {
-  height: 8px;
-  background: rgba(68,58,46,0.65);
-  border-radius: 999px;
+#loader-overlay::after {
+  content: '';
+  position: absolute;
+  top: -30%;
+  right: -20%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(194,135,48,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.bg-line {
+  position: absolute;
+  width: 1px;
+  background: rgba(194,135,48,0.06);
+  top: 0;
+  bottom: 0;
+  animation: lineFade 3s ease-in-out infinite;
+}
+
+@keyframes lineFade {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.razor-icon {
+  position: absolute;
+  top: 28px;
+  left: 28px;
+  opacity: 0.06;
+  animation: floatIcon 5s 1s ease-in-out infinite;
+}
+
+.scissors-icon {
+  position: absolute;
+  bottom: 24px;
+  right: 32px;
+  opacity: 0.08;
+  animation: floatIcon 4s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0) rotate(-15deg); }
+  50% { transform: translateY(-10px) rotate(-15deg); }
+}
+
+.pole-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: clamp(1rem, 3vw, 2.4rem);
+  position: relative;
+  z-index: 2;
+}
+
+.pole-cap {
+  width: 52px;
+  height: 10px;
+  background: var(--pale-oak);
+  position: relative;
+  z-index: 2;
+}
+
+.pole-cap.top {
+  border-radius: 4px 4px 0 0;
+}
+
+.pole-cap.bottom {
+  border-radius: 0 0 4px 4px;
+}
+
+.pole-body {
+  width: 52px;
+  height: 160px;
+  position: relative;
+  overflow: hidden;
+  border-left: 3px solid rgba(207,189,166,0.15);
+  border-right: 3px solid rgba(207,189,166,0.15);
+}
+
+.stripe-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 400%;
+  animation: spinStripes 1.4s linear infinite;
+}
+
+@keyframes spinStripes {
+  from { transform: translateY(0); }
+  to { transform: translateY(25%); }
+}
+
+.stripe {
+  height: 26px;
+  width: 100%;
+}
+
+.stripe.s-red {
+  background: var(--gold);
+}
+
+.stripe.s-white {
+  background: var(--pale-oak);
+}
+
+.stripe.s-blue {
+  background: var(--taupe);
+}
+
+.pole-shine {
+  position: absolute;
+  top: 0;
+  left: 7px;
+  width: 8px;
+  bottom: 0;
+  background: rgba(207,189,166,0.07);
+  pointer-events: none;
+}
+
+.logo-wrap {
+  text-align: center;
+  margin-bottom: clamp(1rem, 3vw, 2.8rem);
+  animation: fadeUp 0.6s ease both;
+  position: relative;
+  z-index: 2;
+  width: min(92vw, 420px);
+}
+
+.logo-alpha-text {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 300;
+  letter-spacing: 0.5em;
+  color: var(--pale-oak);
+  text-transform: uppercase;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.logo-barber-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 3rem;
+  font-weight: 900;
+  color: var(--pale-oak);
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.logo-b-accent {
+  color: var(--gold);
+}
+
+.logo-sub {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(207,189,166,0.25);
+  margin-top: 0.5rem;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.progress-wrap {
+  width: min(92vw, 260px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  position: relative;
+  z-index: 2;
+}
+
+.progress-bg {
+  width: 100%;
+  height: 2px;
+  background: rgba(68,58,46,0.3);
+  border-radius: 2px;
   overflow: hidden;
 }
 
-.loader-fill {
-  width: 0;
+.progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #8d5f22, var(--dark-goldenrod));
-  transition: width .2s ease;
+  background: linear-gradient(90deg, var(--gold), var(--gold-h), var(--gold));
+  background-size: 200% 100%;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s ease;
+  animation: shimmer 1.5s linear infinite;
 }
 
-.loader-pct {
-  margin-top: 0.6rem;
-  display: block;
-  color: var(--dark-goldenrod);
-  font-weight: 600;
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.progress-label {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(207,189,166,0.3);
+  min-height: 1em;
+}
+
+.done-overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--black);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.done-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.check-ring {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.4rem;
+  animation: pulseBorder 1.5s ease infinite;
+}
+
+@keyframes pulseBorder {
+  0%, 100% { border-color: var(--gold); }
+  50% { border-color: var(--taupe); }
+}
+
+.done-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--pale-oak);
+  letter-spacing: 0.04em;
+  margin-bottom: 0.4rem;
+}
+
+.done-sub {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(207,189,166,0.3);
 }
 
 @media (max-width: 480px) {
-  .loader-wrap { padding: 1rem; border-radius: 10px; }
+  .razor-icon {
+    top: 16px;
+    left: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .scissors-icon {
+    bottom: 16px;
+    right: 16px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .pole-wrap {
+    transform: scale(0.86);
+    transform-origin: center;
+    margin-bottom: 0.6rem;
+  }
+
+  .logo-wrap {
+    margin-bottom: 0.8rem;
+  }
+
+  .logo-alpha-text {
+    font-size: 0.66rem;
+    letter-spacing: 0.42em;
+  }
+
+  .logo-barber-text {
+    font-size: clamp(2rem, 10vw, 2.3rem);
+  }
+
+  .progress-wrap {
+    width: min(84vw, 230px);
+  }
+
+  .logo-sub {
+    font-size: 0.58rem;
+    letter-spacing: 0.28em;
+  }
 }

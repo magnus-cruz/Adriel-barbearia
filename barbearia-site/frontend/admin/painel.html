@@ -10,6 +10,7 @@
   <title>Alpha Barber - Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../css/loader.css">
   <script src="../js/auth.js"></script>
   <script>exigirAdmin();</script>
 </head>
@@ -95,6 +96,16 @@
           </span>
           <span class="sidebar-label">Galeria</span>
           <span class="sidebar-badge" id="badge-galeria"></span>
+        </button>
+
+        <button class="sidebar-item" onclick="switchTab(this, 'config')" data-tab="config" type="button" title="Configurações">
+          <span class="sidebar-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </span>
+          <span class="sidebar-label">Configurações</span>
         </button>
 
         <button class="sidebar-item" onclick="switchTab(this, 'agendamentos')" data-tab="agendamentos" type="button" title="Agendamentos">
@@ -287,19 +298,40 @@
         </article>
       </section>
 
+      <!-- TAB: CONFIG -->
+      <section id="tab-config" class="tab-content">
+        <article class="section-card">
+          <header class="section-card-header"><h2 class="section-card-title">Configurações da Barbearia</h2></header>
+          <div class="section-card-body">
+            <div class="admin-form" style="max-width:560px">
+              <div class="form-group full"><label class="form-label">Nome da Barbearia</label><input id="cfg-nome" type="text" class="form-input" placeholder="Alpha Barber"></div>
+              <div class="form-group full"><label class="form-label">WhatsApp para Notificações *</label><div style="position:relative"><span style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);font-size:.84rem;color:var(--pale-oak-dim)">+55</span><input id="cfg-wpp" type="tel" class="form-input" style="padding-left:3rem" placeholder="61983088897" maxlength="11"></div><span style="font-size:.65rem;color:var(--pale-oak-dim);margin-top:.25rem">Número que receberá notificação de cada novo agendamento (sem +55)</span></div>
+              <div class="form-group full"><label class="form-label">Endereço</label><input id="cfg-end" type="text" class="form-input" placeholder="Rua XV de Novembro, 142 — Paracatu, MG"></div>
+              <div class="form-group full"><button class="btn-primary" onclick="salvarConfig()" type="button">Salvar Configurações</button></div>
+            </div>
+            <div style="margin-top:2rem;padding:1rem 1.2rem;background:var(--carbon-light);border:1px solid var(--taupe-border);border-radius:4px;font-size:.82rem;color:var(--pale-oak-dim)">
+              <div style="font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--dark-goldenrod);margin-bottom:.5rem">Como funciona a notificação</div>
+              A cada novo agendamento, o sistema gera automaticamente uma mensagem pré-formatada e abre o WhatsApp Web com todos os dados do cliente para o número configurado acima.
+            </div>
+          </div>
+        </article>
+      </section>
+
       <!-- TAB: AGENDAMENTOS -->
       <section id="tab-agendamentos" class="tab-content">
         <article class="section-card">
           <header class="section-card-header"><h2 class="section-card-title">Agendamentos</h2></header>
           <div class="section-card-body">
             <div class="admin-form" style="margin-bottom:1rem;">
-              <div class="form-group"><label class="form-label" for="filtro-data">Filtrar por data minima</label><input id="filtro-data" class="form-input" type="date"></div>
+              <div class="form-group"><label class="form-label" for="filtro-data-inicio">Data inicial</label><input id="filtro-data-inicio" class="form-input" type="date"></div>
+              <div class="form-group"><label class="form-label" for="filtro-data-fim">Data final</label><input id="filtro-data-fim" class="form-input" type="date"></div>
               <div class="form-group"><label class="form-label" for="filtro-status">Status</label><select id="filtro-status" class="form-input" onchange="filtrarAgendamentos()"><option value="todos">Todos</option><option value="confirmado">Confirmados</option><option value="pendente">Pendentes</option><option value="cancelado">Cancelados</option></select></div>
               <button id="btn-filtrar-data" class="btn-primary full" type="button">Aplicar filtro</button>
+              <button id="btn-imprimir-agendamentos" class="btn-outline full" type="button" onclick="imprimirAgendamentos()">Imprimir selecionados</button>
             </div>
             <div class="table-wrap">
               <table class="admin-table">
-                <thead><tr><th>Cliente</th><th>Servico</th><th>Barbeiro</th><th>Data</th><th>Horario</th><th>Status</th><th>Acoes</th></tr></thead>
+                <thead><tr><th>Cliente</th><th>Telefone</th><th>Servico</th><th>Valor</th><th>Barbeiro</th><th>Data</th><th>Horario</th><th>Status</th><th>Acoes</th></tr></thead>
                 <tbody id="tbody-agendamentos"></tbody>
               </table>
             </div>
@@ -307,6 +339,16 @@
         </article>
       </section>
     </main>
+  </div>
+
+  <div id="loader-overlay" class="hidden">
+    <div id="bg-lines"></div>
+    <svg class="razor-icon" width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true"><rect x="8" y="28" width="48" height="8" rx="2" fill="#CFBDA6"/><path d="M8 28 L20 18 L20 46 L8 36 Z" fill="#C28730"/><rect x="50" y="30" width="6" height="4" rx="1" fill="#CFBDA6"/></svg>
+    <svg class="scissors-icon" width="80" height="80" viewBox="0 0 80 80" fill="none" aria-hidden="true"><circle cx="20" cy="58" r="10" stroke="#CFBDA6" stroke-width="2.5"/><circle cx="20" cy="22" r="10" stroke="#CFBDA6" stroke-width="2.5"/><line x1="28" y1="52" x2="68" y2="16" stroke="#CFBDA6" stroke-width="2.5" stroke-linecap="round"/><line x1="28" y1="28" x2="68" y2="64" stroke="#CFBDA6" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="58" r="4" fill="#C28730"/><circle cx="20" cy="22" r="4" fill="#C28730"/></svg>
+    <div class="pole-wrap"><div class="pole-cap top"></div><div class="pole-body"><div class="stripe-track" id="stripe-track"></div><div class="pole-shine"></div></div><div class="pole-cap bottom"></div></div>
+    <div class="logo-wrap"><div class="logo-alpha-text">ALPHA</div><div class="logo-barber-text"><span class="logo-b-accent">B</span>ARBER</div><div class="logo-sub">Barbearia Profissional</div></div>
+    <div class="progress-wrap"><div class="progress-bg"><div class="progress-fill" id="progress-fill"></div></div><div class="progress-label" id="progress-label">Preparando a navalha...</div></div>
+    <div class="done-overlay" id="done-overlay"><div class="check-ring"><svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><path d="M6 14L11 19L22 9" stroke="#C28730" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="done-title">Pronto para atender</div><div class="done-sub">Alpha Barber</div></div>
   </div>
 
   <div id="lightbox" class="lightbox" aria-hidden="true">
@@ -321,6 +363,7 @@
 
   <script src="../js/api.js"></script>
   <script src="../js/ui.js"></script>
+  <script src="../js/loader.js"></script>
   <script src="../js/admin.js"></script>
 </body>
 </html>

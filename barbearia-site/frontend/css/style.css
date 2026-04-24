@@ -59,10 +59,10 @@ h1, h2, h3, .brand, .section-title, .course-title, .modal-titulo { font-family: 
 .divider-gold { width: 50px; height: 2px; background: var(--dark-goldenrod); margin: 0.8rem 0 2rem; }
 
 .logo-alpha-barber { display: inline-flex; align-items: center; gap: 0.75rem; }
-.logo-alpha-barber img { height: 48px; width: auto; object-fit: contain; }
+.logo-alpha-barber img { height: 60px; width: auto; object-fit: contain; }
 .logo-texto { display: flex; flex-direction: column; align-items: flex-start; line-height: 1; gap: 0; }
-.logo-alpha { font-family: 'Barlow', sans-serif; font-size: 0.6rem; font-weight: 300; letter-spacing: 0.5em; color: var(--pale-oak); text-transform: uppercase; }
-.logo-barber { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 700; color: var(--pale-oak); letter-spacing: 0.06em; text-transform: uppercase; line-height: 1; }
+.logo-alpha { font-family: 'Barlow', sans-serif; font-size: 0.72rem; font-weight: 300; letter-spacing: 0.48em; color: var(--pale-oak); text-transform: uppercase; }
+.logo-barber { font-family: 'Playfair Display', serif; font-size: 2.15rem; font-weight: 700; color: var(--pale-oak); letter-spacing: 0.05em; text-transform: uppercase; line-height: 1; }
 .logo-accent { color: var(--dark-goldenrod); }
 
 .topbar, header.site-header { position: sticky; top: 0; z-index: 100; background: rgba(0,0,0,0.95); border-bottom: 1px solid var(--taupe-border); backdrop-filter: blur(8px); }
@@ -1027,9 +1027,129 @@ section { padding: 5rem 0; position: relative; z-index: 1; }
 .whatsapp-float, .wpp-float { position: fixed; bottom: 2rem; right: 2rem; width: 52px; height: 52px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 9999; border: none; transition: transform 0.2s; box-shadow: 0 4px 16px rgba(37,211,102,0.3); }
 .whatsapp-float:hover, .wpp-float:hover { transform: scale(1.1); }
 
-footer, .footer { background: var(--carbon-black); border-top: 1px solid var(--taupe-border); padding: 3rem 0; position: relative; }
-footer::before, .footer::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--grad-gold); opacity: 0.5; }
-footer .container, .footer .container { display: flex; flex-direction: column; gap: 0.65rem; color: var(--pale-oak-dim); }
+footer, .footer {
+  background:
+    radial-gradient(circle at top left, rgba(194, 135, 48, 0.12), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(253, 240, 213, 0.05), transparent 28%),
+    linear-gradient(180deg, rgba(18, 18, 16, 0.98), rgba(10, 10, 9, 1));
+  border-top: 1px solid var(--taupe-border);
+  padding: 4rem 0 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+footer::before, .footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--grad-gold);
+  opacity: 0.75;
+}
+
+footer::after, .footer::after {
+  content: '';
+  position: absolute;
+  inset: auto -10% -55% auto;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(194, 135, 48, 0.14) 0%, transparent 68%);
+  pointer-events: none;
+}
+
+footer .container,
+.footer .container {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr 0.9fr;
+  gap: 2rem;
+  align-items: start;
+  color: var(--pale-oak-dim);
+  position: relative;
+  z-index: 1;
+}
+
+.footer-brand {
+  max-width: 360px;
+}
+
+.footer-brand .logo-texto {
+  margin-bottom: 0.9rem;
+}
+
+.footer-desc {
+  font-size: 0.92rem;
+  line-height: 1.8;
+  color: var(--pale-oak-dim);
+  max-width: 30ch;
+}
+
+.footer-col h4 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.02rem;
+  line-height: 1.1;
+  color: var(--pale-oak);
+  margin-bottom: 1rem;
+}
+
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.footer-col li,
+.footer-col a {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--pale-oak-dim);
+}
+
+.footer-col a {
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.footer-col a:hover {
+  color: var(--dark-goldenrod);
+  transform: translateX(2px);
+}
+
+.footer-bottom {
+  width: min(1160px, 90%);
+  margin: 2rem auto 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(207, 189, 166, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(207, 189, 166, 0.72);
+  position: relative;
+  z-index: 1;
+}
+
+.footer-bottom span:last-child {
+  color: rgba(194, 135, 48, 0.82);
+}
+
+.btn-spinner {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.24);
+  border-top-color: currentColor;
+  animation: spinBtn 0.8s linear infinite;
+}
+
+@keyframes spinBtn {
+  to { transform: rotate(360deg); }
+}
 
 .map-placeholder { background: var(--carbon-light); height: 280px; border-radius: 4px; border: 1px solid var(--taupe-border); display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .location-info h4 { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dark-goldenrod); margin-bottom: 0.4rem; }
@@ -1175,6 +1295,23 @@ footer .container, .footer .container { display: flex; flex-direction: column; g
     padding: 0.7rem;
   }
 
+  footer .container,
+  .footer .container {
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+  }
+
+  .footer-brand {
+    max-width: none;
+  }
+
+  .footer-bottom {
+    width: min(92%, 100%);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+  }
+
   .booking-form { grid-template-columns: 1fr; }
   .booking-form .full { grid-column: span 1; }
   section { padding: 3.5rem 0; }
@@ -1235,8 +1372,8 @@ footer .container, .footer .container { display: flex; flex-direction: column; g
 
 @media (max-width: 480px) {
   .container { width: min(94%, 100%); }
-  .logo-alpha-barber img { height: 42px; }
-  .logo-barber { font-size: 1.52rem; }
+  .logo-alpha-barber img { height: 50px; }
+  .logo-barber { font-size: 1.75rem; }
   .hero-card { padding: 1.15rem; border-radius: 12px; }
   .hero h1 { font-size: clamp(1.8rem, 10vw, 2.7rem); }
   .hero-btns { gap: 0.65rem; }
@@ -1248,8 +1385,8 @@ footer .container, .footer .container { display: flex; flex-direction: column; g
 }
 
 @media (max-width: 360px) {
-  .logo-barber { font-size: 1.34rem; }
-  .logo-alpha { letter-spacing: 0.36em; }
+  .logo-barber { font-size: 1.55rem; }
+  .logo-alpha { letter-spacing: 0.34em; }
   .topbar .container, header.site-header .container { padding: 0.75rem 0; }
   .menu-toggle,
   .hamburger { width: 40px; height: 40px; }

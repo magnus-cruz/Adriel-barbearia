@@ -73,7 +73,7 @@ button, input, select, textarea { font: inherit; }
 }
 
 .admin-logo img {
-  height: 36px;
+  height: 44px;
   width: auto;
   object-fit: contain;
 }
@@ -86,19 +86,19 @@ button, input, select, textarea { font: inherit; }
 
 .logo-alpha {
   font-family: 'Barlow', sans-serif;
-  font-size: 0.55rem;
+  font-size: 0.66rem;
   font-weight: 300;
-  letter-spacing: 0.5em;
+  letter-spacing: 0.45em;
   color: var(--pale-oak);
   text-transform: uppercase;
 }
 
 .logo-barber {
   font-family: 'Playfair Display', serif;
-  font-size: 1.4rem;
+  font-size: 1.7rem;
   font-weight: 700;
   color: var(--pale-oak);
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 

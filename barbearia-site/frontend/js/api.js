@@ -45,6 +45,10 @@ async function apiGet(endpoint, admin = false) {
   return parseResposta(res);
 }
 
+function apiGetAdmin(endpoint) {
+  return apiGet(endpoint, true);
+}
+
 async function apiRequest(method, endpoint, body, admin = false) {
   const headers = {
     'Content-Type': 'application/json; charset=utf-8',
@@ -127,6 +131,7 @@ const API = {
   base: API_BASE,
   semCache,
   apiGet,
+  apiGetAdmin,
   apiRequest,
   apiUpload,
   verificarServidor,
@@ -143,6 +148,10 @@ const API = {
 
   adminCheck: () => apiGet('/api/admin/check', true),
   adminLogin: (usuario, senha) => apiRequest('POST', '/api/admin/login', { usuario, senha }),
+  adminConfig: {
+    listar: () => apiGet('/api/admin/config', true),
+    salvar: (payload) => apiRequest('PUT', '/api/admin/config', payload, true)
+  },
 
   adminServicos: {
     listar: () => apiGet('/api/admin/servicos', true),
@@ -169,8 +178,15 @@ const API = {
   },
 
   adminAgendamentos: {
-    listar: (dataMin) => apiGet(`/api/admin/agendamentos${dataMin ? `?data=${encodeURIComponent(dataMin)}` : ''}`, true),
-    cancelar: (id) => apiRequest('PUT', `/api/admin/agendamentos/${id}/cancelar`, null, true)
+    listar: (dataInicio, dataFim) => {
+      const params = new URLSearchParams();
+      if (dataInicio) params.set('dataInicio', dataInicio);
+      if (dataFim) params.set('dataFim', dataFim);
+      const query = params.toString();
+      return apiGet(`/api/admin/agendamentos${query ? `?${query}` : ''}`, true);
+    },
+    cancelar: (id) => apiRequest('PUT', `/api/admin/agendamentos/${id}/cancelar`, null, true),
+    excluir: (id) => apiRequest('DELETE', `/api/admin/agendamentos/${id}`, null, true)
   },
 
   adminMidia: {

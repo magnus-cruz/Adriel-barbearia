@@ -11,12 +11,132 @@ let cacheBarbeiros = [];
 let cacheMidias = [];
 let cacheImprevistos = [];
 
+function obterValorServico(nomeServico) {
+  const servico = cacheServicos.find((item) => String(item.nome || '').trim() === String(nomeServico || '').trim());
+  return servico ? Number(servico.preco || 0) : null;
+}
+
+function formatarMoedaRelatorio(valor) {
+  return valor === null || Number.isNaN(Number(valor))
+    ? '-'
+    : API.formatarMoeda(valor);
+}
+
+function getAgendamentosFiltrados() {
+  const status = document.getElementById('filtro-status')?.value || 'todos';
+  const dataInicio = document.getElementById('filtro-data-inicio')?.value || '';
+  const dataFim = document.getElementById('filtro-data-fim')?.value || '';
+
+  return cacheAgendamentos.filter((item) => {
+    const dataItem = String(item.data || '').trim();
+    const statusItem = String(item.status || '').toLowerCase();
+
+    if (dataInicio && dataItem < dataInicio) return false;
+    if (dataFim && dataItem > dataFim) return false;
+    if (status !== 'todos' && statusItem !== status) return false;
+    return true;
+  });
+}
+
+function montarHtmlImpressao(lista) {
+  const total = lista.reduce((soma, item) => soma + (obterValorServico(item.servico) || 0), 0);
+  const inicio = document.getElementById('filtro-data-inicio')?.value || 'início';
+  const fim = document.getElementById('filtro-data-fim')?.value || 'fim';
+  const titulo = document.getElementById('secao-titulo')?.textContent || 'Agendamentos';
+
+  const linhas = lista.map((item) => `
+    <tr>
+      <td>${item.nomeCliente || item.nome || '-'}</td>
+      <td>${item.telefone || '-'}</td>
+      <td>${item.servico || '-'}</td>
+      <td>${formatarMoedaRelatorio(obterValorServico(item.servico))}</td>
+      <td>${item.barbeiro || '-'}</td>
+      <td>${item.data || '-'}</td>
+      <td>${item.horario || '-'}</td>
+      <td>${item.status || '-'}</td>
+    </tr>
+  `).join('');
+
+  return `
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <title>${titulo} - Relatorio</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 24px; color: #1d1d1d; }
+        h1 { margin: 0 0 8px; font-size: 24px; }
+        .meta { margin-bottom: 18px; color: #555; font-size: 13px; }
+        .summary { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 18px; font-size: 13px; }
+        .summary div { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #f3f3f3; }
+        tfoot td { font-weight: bold; }
+        @media print { body { padding: 0; } }
+      </style>
+    </head>
+    <body>
+      <h1>${titulo}</h1>
+      <div class="meta">Período: ${inicio} até ${fim}</div>
+      <div class="summary">
+        <div><strong>Total de agendamentos:</strong> ${lista.length}</div>
+        <div><strong>Valor total dos serviços:</strong> ${API.formatarMoeda(total)}</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th><th>Telefone</th><th>Serviço</th><th>Valor</th><th>Barbeiro</th><th>Data</th><th>Horário</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${linhas || '<tr><td colspan="8">Nenhum agendamento encontrado.</td></tr>'}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3">Totais</td>
+            <td>${API.formatarMoeda(total)}</td>
+            <td colspan="4">${lista.length} registro(s)</td>
+          </tr>
+        </tfoot>
+      </table>
+      <script>
+        window.onload = () => {
+          window.focus();
+          window.print();
+          window.onafterprint = () => window.close();
+        };
+      </script>
+    </body>
+    </html>
+  `;
+}
+
+function imprimirAgendamentos() {
+  const lista = getAgendamentosFiltrados();
+  if (!lista.length) {
+    mostrarAviso('Nenhum agendamento para imprimir com os filtros atuais.');
+    return;
+  }
+
+  const janela = window.open('', '_blank', 'width=1200,height=900');
+  if (!janela) {
+    mostrarErro('O navegador bloqueou a janela de impressão.');
+    return;
+  }
+
+  janela.document.open();
+  janela.document.write(montarHtmlImpressao(lista));
+  janela.document.close();
+}
+
 const ABAS = {
   servicos: { titulo: 'Servicos e Precos', desc: 'Gerencie os servicos, precos e duracao.', carregar: carregarServicos },
   barbeiros: { titulo: 'Barbeiros', desc: 'Cadastre barbeiros e fotos da equipe.', carregar: carregarBarbeiros },
   horarios: { titulo: 'Horarios Disponiveis', desc: 'Defina horario por dia da semana.', carregar: carregarHorarios },
   imprevistos: { titulo: 'Imprevistos / Bloqueios', desc: 'Bloqueie datas e periodos.', carregar: carregarImprevistos },
   galeria: { titulo: 'Galeria', desc: 'Envie e gerencie fotos e videos.', carregar: carregarMidias },
+  config: { titulo: 'Configuracoes', desc: 'Gerencie as informacoes da barbearia.', carregar: carregarConfig },
   agendamentos: { titulo: 'Agendamentos', desc: 'Acompanhe e cancele reservas.', carregar: carregarAgendamentos }
 };
 
@@ -252,6 +372,47 @@ async function carregarHorarios() {
   window.__horariosCache = dados;
 }
 
+async function carregarConfig() {
+  try {
+    const cfg = await API.adminConfig.listar();
+    const campos = {
+      'cfg-nome': cfg.nomeBarbearia || '',
+      'cfg-wpp': cfg.whatsappNotificacao ? String(cfg.whatsappNotificacao).replace(/^55/, '') : '',
+      'cfg-end': cfg.endereco || ''
+    };
+
+    Object.entries(campos).forEach(([id, valor]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = valor;
+    });
+  } catch (e) {
+    mostrarErro('Erro ao carregar config: ' + e.message);
+  }
+}
+
+async function salvarConfig() {
+  const nome = document.getElementById('cfg-nome').value.trim();
+  const wpp = document.getElementById('cfg-wpp').value.trim();
+  const end = document.getElementById('cfg-end').value.trim();
+
+  if (!wpp || !/^\d{10,11}$/.test(wpp)) {
+    mostrarErro('WhatsApp inválido. Use apenas dígitos com DDD.');
+    return;
+  }
+
+  try {
+    await API.adminConfig.salvar({
+      nomeBarbearia: nome,
+      whatsappNotificacao: '55' + wpp,
+      endereco: end
+    });
+    mostrarSucesso('Configurações salvas!');
+    await carregarConfig();
+  } catch (e) {
+    mostrarErro('Erro: ' + e.message);
+  }
+}
+
 function editarHorario(dia) {
   const dados = window.__horariosCache || { configuracao: { diasSemana: {} } };
   const d = dados.configuracao.diasSemana[dia] || { ativo: false, inicio: '', fim: '' };
@@ -392,33 +553,35 @@ async function carregarAgendamentos() {
   const tbody = document.getElementById('tbody-agendamentos');
   if (!tbody) return;
 
-  const dataMin = document.getElementById('filtro-data').value || '';
-  cacheAgendamentos = await API.adminAgendamentos.listar(dataMin);
+  const dataInicio = document.getElementById('filtro-data-inicio')?.value || '';
+  const dataFim = document.getElementById('filtro-data-fim')?.value || '';
+  cacheAgendamentos = await API.adminAgendamentos.listar(dataInicio, dataFim);
   filtrarAgendamentos();
 }
 
 function filtrarAgendamentos() {
   const tbody = document.getElementById('tbody-agendamentos');
-  const status = document.getElementById('filtro-status').value;
-
-  const lista = status === 'todos'
-    ? cacheAgendamentos
-    : cacheAgendamentos.filter((item) => String(item.status || '').toLowerCase() === status);
+  const lista = getAgendamentosFiltrados();
 
   if (!lista.length) {
-    renderEstadoTabela(tbody, 7, 'Nenhum agendamento encontrado.');
+    renderEstadoTabela(tbody, 9, 'Nenhum agendamento encontrado.');
     return;
   }
 
   tbody.innerHTML = lista.map((a) => `
     <tr>
       <td>${a.nomeCliente || a.nome}</td>
+      <td>${a.telefone || '-'}</td>
       <td>${a.servico}</td>
+      <td>${formatarMoedaRelatorio(obterValorServico(a.servico))}</td>
       <td>${a.barbeiro || '-'}</td>
       <td>${a.data}</td>
       <td>${a.horario}</td>
       <td>${a.status}</td>
-      <td><button class="btn-acao btn-excluir-tabela" type="button" onclick="cancelarAgendamento(${a.id})">Cancelar</button></td>
+      <td class="acoes-cell">
+        <button class="btn-acao btn-excluir-tabela" type="button" onclick="cancelarAgendamento(${a.id})">Cancelar</button>
+        <button class="btn-acao btn-excluir-tabela" type="button" onclick="excluirAgendamento(${a.id})">Excluir</button>
+      </td>
     </tr>
   `).join('');
 }
@@ -427,6 +590,15 @@ function cancelarAgendamento(id) {
   abrirModalConfirmar('Cancelar agendamento', 'Deseja cancelar este agendamento?', async () => {
     await API.adminAgendamentos.cancelar(id);
     mostrarSucesso('Agendamento cancelado.');
+    await carregarAgendamentos();
+    await atualizarBadges();
+  });
+}
+
+function excluirAgendamento(id) {
+  abrirModalConfirmar('Excluir agendamento', 'Deseja excluir definitivamente este agendamento?', async () => {
+    await API.adminAgendamentos.excluir(id);
+    mostrarSucesso('Agendamento excluído.');
     await carregarAgendamentos();
     await atualizarBadges();
   });
@@ -466,6 +638,9 @@ async function inicializar() {
   document.getElementById('form-foto')?.addEventListener('submit', (e) => uploadFoto(e).catch((erro) => mostrarErro(erro.message)));
 
   document.getElementById('btn-filtrar-data')?.addEventListener('click', () => carregarAgendamentos().catch((erro) => mostrarErro(erro.message)));
+  document.getElementById('filtro-data-inicio')?.addEventListener('change', () => filtrarAgendamentos());
+  document.getElementById('filtro-data-fim')?.addEventListener('change', () => filtrarAgendamentos());
+  document.getElementById('filtro-status')?.addEventListener('change', () => filtrarAgendamentos());
 
   configurarPreviewBarbeiro();
 
@@ -490,7 +665,11 @@ window.excluirImprevisto = excluirImprevisto;
 window.togglePausaBarbeiro = togglePausaBarbeiro;
 window.filtrarAgendamentos = filtrarAgendamentos;
 window.cancelarAgendamento = cancelarAgendamento;
+window.excluirAgendamento = excluirAgendamento;
+window.imprimirAgendamentos = imprimirAgendamentos;
 window.excluirMidia = excluirMidia;
+window.carregarConfig = carregarConfig;
+window.salvarConfig = salvarConfig;
 
 document.addEventListener('DOMContentLoaded', () => {
   inicializar().catch((erro) => {

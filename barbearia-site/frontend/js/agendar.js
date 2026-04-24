@@ -8,6 +8,28 @@
 
 /* Dados dos barbeiros em memoria */
 let barbeirosDisponiveis = [];
+let dadosAgendamentoAtual = null;
+let linkWppBarbeiro = null;
+let linkWppBarbearia = null;
+
+function btnLoading(btn, loading, textoOriginal = 'Confirmar agendamento') {
+  if (!btn) return;
+
+  if (loading) {
+    if (!btn.dataset.originalText) {
+      btn.dataset.originalText = btn.textContent.trim();
+    }
+
+    btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
+    btn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span><span>Agendando...</span>';
+    return;
+  }
+
+  btn.disabled = false;
+  btn.removeAttribute('aria-busy');
+  btn.textContent = btn.dataset.originalText || textoOriginal;
+}
 
 async function carregarServicosSelect() {
   const select = document.getElementById('select-servico');
@@ -62,25 +84,94 @@ async function carregarHorariosDisponiveis() {
     horarios.map((h) => `<option value="${h}">${h}</option>`).join('');
 }
 
-/* WhatsApp no botao de confirmacao com dados do barbeiro */
-function gerarLinkWhatsApp(dados) {
-  const barbeiro = barbeirosDisponiveis.find((b) => b.nome === dados.barbeiro);
-  const numero = barbeiro?.whatsapp ? `55${barbeiro.whatsapp}` : '55NUMERODABARBEARIA';
-
-  const msg = encodeURIComponent(
-    'Alpha Barber - Agendamento\n\n' +
-    `Nome: ${dados.nome}\n` +
-    `Servico: ${dados.servico}\n` +
-    `Barbeiro: ${dados.barbeiro || 'Qualquer'}\n` +
-    `Data: ${API.formatarData(dados.data)}\n` +
-    `Horario: ${dados.horario}\n\n` +
-    'Aguardo confirmacao!'
+function construirMensagemBarbeiro(dados) {
+  return encodeURIComponent(
+    '✂ *Alpha Barber — Agendamento*\n\n' +
+    '👤 Nome: ' + dados.nome + '\n' +
+    '💈 Serviço: ' + dados.servico + '\n' +
+    '👨 Barbeiro: ' + dados.barbeiro + '\n' +
+    '📅 Data: ' + API.formatarData(dados.data) + '\n' +
+    '🕐 Horário: ' + dados.horario + '\n\n' +
+    'Aguardo confirmação!'
   );
-
-  return `https://wa.me/${numero}?text=${msg}`;
 }
 
-/* Apos confirmar agendamento */
+function atualizarOpcaoBarbeiro(dados) {
+  const wrap = document.getElementById('opcao-wpp-barbeiro-wrap');
+  const nomeEl = document.getElementById('label-barbeiro-wpp');
+  const barbeiroObj = barbeirosDisponiveis.find((b) => b.nome === dados.barbeiro);
+
+  if (!wrap) return;
+
+  if (!barbeiroObj || !barbeiroObj.whatsapp) {
+    wrap.style.display = 'none';
+    linkWppBarbeiro = null;
+    return;
+  }
+
+  linkWppBarbeiro = `https://wa.me/55${barbeiroObj.whatsapp}?text=${construirMensagemBarbeiro(dados)}`;
+  wrap.style.display = 'block';
+
+  if (nomeEl) {
+    nomeEl.textContent = `${barbeiroObj.nome} — ${barbeiroObj.especialidade || 'Barbeiro'}`;
+  }
+}
+
+function abrirModalWpp() {
+  const modal = document.getElementById('modal-agendar-wpp');
+  if (modal) {
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function fecharModalWpp() {
+  const modal = document.getElementById('modal-agendar-wpp');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  limparFormulario();
+  mostrarSucesso('Agendamento realizado com sucesso!');
+}
+
+function limparFormulario() {
+  ['input-nome', 'input-tel', 'input-data'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+
+  const selectServico = document.getElementById('select-servico');
+  if (selectServico) selectServico.selectedIndex = 0;
+
+  const selectBarbeiro = document.getElementById('select-barbeiro');
+  if (selectBarbeiro) selectBarbeiro.selectedIndex = 0;
+
+  const selectHorario = document.getElementById('select-horario');
+  if (selectHorario) {
+    selectHorario.innerHTML = '<option value="">Selecione uma data primeiro</option>';
+  }
+
+  const infoWrap = document.getElementById('info-barbeiro-wrap');
+  if (infoWrap) infoWrap.style.display = 'none';
+
+  dadosAgendamentoAtual = null;
+  linkWppBarbeiro = null;
+  linkWppBarbearia = null;
+}
+
+function abrirWppBarbeiro() {
+  if (linkWppBarbeiro) {
+    window.open(linkWppBarbeiro, '_blank');
+  }
+  fecharModalWpp();
+}
+
+function abrirWppBarbearia() {
+  if (linkWppBarbearia) {
+    window.open(linkWppBarbearia, '_blank');
+  }
+  fecharModalWpp();
+}
+
 async function confirmarAgendamento(event) {
   event.preventDefault();
 
@@ -94,12 +185,16 @@ async function confirmarAgendamento(event) {
   };
 
   if (!dados.nome || !dados.telefone || !dados.servico || !dados.data || !dados.horario) {
-    mostrarErro('Preencha todos os campos obrigatorios.');
+    mostrarErro('Preencha todos os campos obrigatórios.');
     return;
   }
 
+  const btn = document.getElementById('btn-confirmar');
+  if (btn) btnLoading(btn, true);
+  const janelaNotificacao = window.open('about:blank', '_blank');
+
   try {
-    await API.agendar({
+    const resp = await API.agendar({
       nome: dados.nome,
       nomeCliente: dados.nome,
       telefone: dados.telefone,
@@ -109,15 +204,30 @@ async function confirmarAgendamento(event) {
       horario: dados.horario
     });
 
-    mostrarSucesso('Agendamento confirmado!');
+    dadosAgendamentoAtual = dados;
+    linkWppBarbearia = resp.linkNotificacao || null;
 
-    const link = gerarLinkWhatsApp(dados);
-    const botao = document.getElementById('btn-confirmar-wpp');
-    const box = document.getElementById('confirmacao-box');
-    if (botao) botao.href = link;
-    if (box) box.style.display = 'block';
+    atualizarOpcaoBarbeiro(dados);
+
+    if (resp.linkNotificacao) {
+      if (janelaNotificacao) {
+        janelaNotificacao.location.href = resp.linkNotificacao;
+        janelaNotificacao.focus();
+      } else {
+        window.open(resp.linkNotificacao, '_blank');
+      }
+    }
+
+    setTimeout(() => {
+      abrirModalWpp();
+    }, 800);
   } catch (e) {
+    if (janelaNotificacao && !janelaNotificacao.closed) {
+      janelaNotificacao.close();
+    }
     mostrarErro(e.message || 'Erro ao agendar.');
+  } finally {
+    if (btn) btnLoading(btn, false, 'Confirmar agendamento');
   }
 }
 
@@ -135,13 +245,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       carregarHorariosDisponiveis().catch((e) => mostrarErro(e.message));
     });
 
-    /* Ao mudar barbeiro selecionado */
     document.getElementById('select-barbeiro')?.addEventListener('change', function mudarBarbeiro() {
       const wrap = document.getElementById('info-barbeiro-wrap');
       const nomeEl = document.getElementById('info-barbeiro-nome');
       const especEl = document.getElementById('info-barbeiro-espec');
       const btnWpp = document.getElementById('btn-wpp-barbeiro');
-
       const valor = this.value;
 
       if (!valor) {
@@ -155,14 +263,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       if (nomeEl) nomeEl.textContent = valor;
       if (especEl) especEl.textContent = esp;
-
-      if (btnWpp && wpp) {
-        btnWpp.href = `https://wa.me/55${wpp}`;
-        btnWpp.style.display = 'inline-flex';
-      } else if (btnWpp) {
-        btnWpp.style.display = 'none';
+      if (btnWpp) {
+        if (wpp) {
+          btnWpp.href = `https://wa.me/55${wpp}`;
+          btnWpp.style.display = 'inline-flex';
+        } else {
+          btnWpp.style.display = 'none';
+        }
       }
-
       if (wrap) wrap.style.display = 'block';
     });
 
@@ -173,3 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     mostrarErro(erro.message || 'Falha ao carregar dados de agendamento.');
   }
 });
+
+window.abrirWppBarbeiro = abrirWppBarbeiro;
+window.abrirWppBarbearia = abrirWppBarbearia;
+window.fecharModalWpp = fecharModalWpp;

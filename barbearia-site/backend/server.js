@@ -22,6 +22,11 @@ const JSONsIniciais = {
   'agendamentos.json': [],
   'imprevistos.json': [],
   'midia-metadata.json': [],
+  'config.json': {
+    whatsappNotificacao: '5561983088897',
+    nomeBarbearia: 'Alpha Barber',
+    endereco: 'Rua XV de Novembro, 142 — Paracatu, MG'
+  },
   'horarios.json': {
     configuracao: {
       intervaloPadrao: 30,
@@ -87,6 +92,7 @@ app.use('/api', require('./routes/servicos'));
 app.use('/api', require('./routes/barbeiros'));
 app.use('/api', require('./routes/horarios'));
 app.use('/api', require('./routes/agendamentos'));
+app.use('/api', require('./routes/config'));
 app.use('/api', require('./routes/imprevistos'));
 app.use('/api', require('./routes/midia'));
 
