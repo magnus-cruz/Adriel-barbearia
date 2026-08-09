@@ -3,17 +3,23 @@
 Projeto completo de barbearia com backend em Node.js + Express e frontend em HTML/CSS/JavaScript puro.
 
 ## Requisitos
-- Node.js 18+
+- Node.js 18+ opcional, se quiser usar o runtime do sistema
 - npm 9+
+- Python 3 para o servidor estatico local
 
-## Instalacao
+## Instalacao no Linux Mint
 ```bash
-cd backend
+cd barbearia-site/backend
 npm install
 ```
 
+Se o `node` nao estiver instalado no sistema, o script do backend usa o runtime Node empacotado via Python e continua funcionando.
+
+Se preferir usar as tasks do VS Code, elas agora chamam scripts `bash` para funcionar no Linux Mint.
+
 ## Executar
 ```bash
+cd barbearia-site/backend
 npm start
 ```
 Ou para desenvolvimento:
@@ -21,9 +27,32 @@ Ou para desenvolvimento:
 npm run dev
 ```
 
+Frontend local:
+```bash
+cd barbearia-site/frontend
+python3 -m http.server 5500
+```
+
+Depois abra `http://localhost:5500/index.html`.
+
+Atalho validado na workspace:
+```bash
+bash .vscode/scripts/start-backend.sh
+bash .vscode/scripts/start-frontend.sh
+```
+
 ## Acessar
 - API: http://localhost:8080/api/health
-- Frontend: abrir frontend/index.html com Live Server (VS Code), geralmente em http://127.0.0.1:5500
+- Frontend: http://localhost:5500/index.html
+
+## Como rodar tudo
+1. Abra um terminal na raiz do repositório.
+2. Execute `cd barbearia-site/backend && npm install` na primeira vez.
+3. Em outro terminal, execute `bash .vscode/scripts/start-backend.sh`.
+4. Em outro terminal, execute `bash .vscode/scripts/start-frontend.sh`.
+5. Acesse `http://localhost:5500/index.html` e a API em `http://localhost:8080/api/health`.
+
+No VS Code, as tasks `Barbearia: Backend API`, `Barbearia: Frontend estatico` e `Barbearia: Tudo (API + Frontend)` usam esses mesmos comandos no Linux Mint.
 
 ## Login Admin
 - Usuario: admin

@@ -9,6 +9,8 @@ cd barbearia-backend
 npm install
 ```
 
+Este backend é o mais antigo do repositório. O site que foi validado agora usa `barbearia-site/backend`.
+
 ## Executar
 
 ```bash
@@ -16,6 +18,8 @@ node server.js
 # ou em desenvolvimento:
 npm run dev
 ```
+
+Se a intenção for rodar o site completo do repositório, use `bash .vscode/scripts/start-backend.sh` na raiz do projeto e sirva o frontend em `barbearia-site/frontend` com `bash .vscode/scripts/start-frontend.sh`.
 
 ## Testar API
 

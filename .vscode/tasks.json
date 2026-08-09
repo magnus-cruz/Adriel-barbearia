@@ -4,13 +4,9 @@
     {
       "label": "Barbearia: Backend API",
       "type": "shell",
-      "command": "powershell",
+      "command": "bash",
       "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}\\.vscode\\scripts\\start-backend.ps1"
+        "${workspaceFolder}/.vscode/scripts/start-backend.sh"
       ],
       "isBackground": true,
       "problemMatcher": []
@@ -18,13 +14,9 @@
     {
       "label": "Barbearia: Frontend estatico",
       "type": "shell",
-      "command": "powershell",
+      "command": "bash",
       "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}\\.vscode\\scripts\\start-frontend.ps1"
+        "${workspaceFolder}/.vscode/scripts/start-frontend.sh"
       ],
       "isBackground": true,
       "problemMatcher": []
@@ -41,13 +33,9 @@
     {
       "label": "Barbearia: Abrir frontend",
       "type": "shell",
-      "command": "powershell",
+      "command": "bash",
       "args": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}\\.vscode\\scripts\\open-frontend.ps1"
+        "${workspaceFolder}/.vscode/scripts/open-frontend.sh"
       ],
       "problemMatcher": []
     }

@@ -506,6 +506,26 @@ async function carregarMidias() {
   if (contador) contador.textContent = `${cacheMidias.length} item(ns)`;
 }
 
+function atualizarEstadoBotaoUpload() {
+  const input = document.getElementById('file-upload');
+  const botao = document.getElementById('btn-enviar');
+  if (!input || !botao) return;
+
+  botao.disabled = !input.files?.length;
+}
+
+function configurarUploadMidia() {
+  const input = document.getElementById('file-upload');
+  const label = input?.closest('label')?.querySelector('.text span');
+
+  input?.addEventListener('change', () => {
+    if (label) label.textContent = input.files?.[0]?.name || 'Clique ou arraste a imagem aqui';
+    atualizarEstadoBotaoUpload();
+  });
+
+  atualizarEstadoBotaoUpload();
+}
+
 async function uploadFoto(event) {
   event.preventDefault();
 
@@ -533,6 +553,7 @@ async function uploadFoto(event) {
   });
 
   event.target.reset();
+  configurarUploadMidia();
   document.getElementById('progress-wrap').style.display = 'none';
   mostrarSucesso('Upload concluido.');
   await carregarMidias();
@@ -643,6 +664,7 @@ async function inicializar() {
   document.getElementById('filtro-status')?.addEventListener('change', () => filtrarAgendamentos());
 
   configurarPreviewBarbeiro();
+  configurarUploadMidia();
 
   await Promise.all([
     carregarServicos(),

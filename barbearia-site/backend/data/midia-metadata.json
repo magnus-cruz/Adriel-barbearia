@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": "18e38ea6-ae41-44a6-8ec8-1ad77834bb4a",
+    "nomeArquivo": "upload-b88f047c-5f89-43e9-9786-012bad5fdf32.jpg",
+    "tipo": "image/jpeg",
+    "categoria": "cortes",
+    "titulo": "Corte Novo",
+    "url": "http://localhost:8080/api/uploads/upload-b88f047c-5f89-43e9-9786-012bad5fdf32.jpg",
+    "tamanhoKb": 3186,
+    "dataUpload": "2026-08-09"
+  },
+  {
+    "id": "72ed9dee-e330-4a08-985c-aec67e5cb73d",
+    "nomeArquivo": "upload-dabd4eb6-2f2f-4a20-a81e-abab3b07ef03.jpg",
+    "tipo": "image/jpeg",
+    "categoria": "galeria",
+    "titulo": "Degrader",
+    "url": "http://localhost:8080/api/uploads/upload-dabd4eb6-2f2f-4a20-a81e-abab3b07ef03.jpg",
+    "tamanhoKb": 420,
+    "dataUpload": "2026-08-09"
+  }
+]
